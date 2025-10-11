@@ -278,31 +278,17 @@ export default function Home() {
       // Record day completion in database
       await recordDayCompletion(activeDay, exerciseIds);
       
-      // Update weekly session with completed days
+      // Update weekly session with completed days - this will trigger automatic progress updates
       await updateWeeklySession(newCompletedDays);
       
-      // Increment total days in database
-      const success = await incrementTotalDays();
-      
-      // If all days completed, increment wins
-      if (allDaysCompleted) {
-        await incrementWins();
-        // Refresh battle progress
-        if (battleProgressRef.current) {
-          await battleProgressRef.current.refreshFromDatabase();
-        }
+      // Refresh battle progress if week is completed
+      if (allDaysCompleted && battleProgressRef.current) {
+        await battleProgressRef.current.refreshFromDatabase();
       }
       
-      if (success) {
-        // Refresh the counter from database to ensure accuracy
-        if (completeDaysRef.current) {
-          await completeDaysRef.current.refreshFromDatabase();
-        }
-      } else {
-        // Fallback: just increment UI if database fails
-        if (completeDaysRef.current) {
-          completeDaysRef.current.incrementDays();
-        }
+      // Refresh the counter from database to ensure accuracy
+      if (completeDaysRef.current) {
+        await completeDaysRef.current.refreshFromDatabase();
       }
     } catch (error) {
       console.error('Error saving day completion to database:', error);
