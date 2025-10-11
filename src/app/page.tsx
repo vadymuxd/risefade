@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import ExerciseCard from '@/components/ExerciseCard';
 import DaysNavigation from '@/components/DaysNavigation';
 import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
+import WeekDay from '@/components/WeekDay';
 import { recordDayCompletion, updateWeeklySession, incrementTotalDays, resetAllProgress } from '../../lib/database';
+import { isKeepingUpWithSchedule } from '../../lib/scheduleUtils';
 
 export default function Home() {
   const [activeDay, setActiveDay] = useState('day1');
@@ -315,12 +317,16 @@ export default function Home() {
       {/* Complete Days Tracker - Full Width */}
       <CompleteDays ref={completeDaysRef} />
       
+      {/* Week Day Tracker - Full Width */}
+      <WeekDay completedDays={completedDays} />
+      
       <div className="max-w-full mx-auto p-4">
         {/* Days Navigation */}
         <DaysNavigation 
           activeDay={activeDay}
           completedDays={completedDays}
           onDayChange={setActiveDay}
+          keepingUpWithSchedule={isKeepingUpWithSchedule(completedDays)}
         />
 
         {/* Content */}
