@@ -22,21 +22,23 @@ export default function DaysNavigation({ activeDay, completedDays, onDayChange, 
 
   const getButtonStyles = (dayKey: string) => {
     const status = getDayStatus(dayKey);
-    
-    // Use red colors if not keeping up with schedule, blue if keeping up
-    const primaryColor = keepingUpWithSchedule ? 'blue' : 'red';
+    return 'flex-1 py-3 px-4 rounded-lg border font-medium transition-all cursor-pointer';
+  };
+
+  const getButtonStyle = (dayKey: string): React.CSSProperties => {
+    const status = getDayStatus(dayKey);
     
     switch (status) {
       case 'completed':
         return keepingUpWithSchedule 
-          ? 'bg-blue-600 text-white border-blue-600'
-          : 'bg-red-600 text-white border-red-600';
+          ? { backgroundColor: 'var(--blue)', color: 'white', borderColor: 'var(--blue)' }
+          : { backgroundColor: 'var(--red)', color: 'white', borderColor: 'var(--red)' };
       case 'active':
         return keepingUpWithSchedule
-          ? 'bg-white text-blue-600 border-blue-600'
-          : 'bg-white text-red-600 border-red-600';
+          ? { backgroundColor: 'white', color: 'var(--blue)', borderColor: 'var(--blue)' }
+          : { backgroundColor: 'white', color: 'var(--red)', borderColor: 'var(--red)' };
       default:
-        return 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
+        return { backgroundColor: 'white', color: '#374151', borderColor: '#D1D5DB' }; // gray-700, gray-300
     }
   };
 
@@ -46,7 +48,18 @@ export default function DaysNavigation({ activeDay, completedDays, onDayChange, 
         <button
           key={dayKey}
           onClick={() => onDayChange(dayKey)}
-          className={`flex-1 py-3 px-4 rounded-lg border font-medium transition-all cursor-pointer ${getButtonStyles(dayKey)}`}
+          className={getButtonStyles(dayKey)}
+          style={getButtonStyle(dayKey)}
+          onMouseEnter={(e) => {
+            if (getDayStatus(dayKey) === 'inactive') {
+              e.currentTarget.style.backgroundColor = '#F9FAFB'; // gray-50
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (getDayStatus(dayKey) === 'inactive') {
+              e.currentTarget.style.backgroundColor = 'white';
+            }
+          }}
         >
           День {index + 1}
         </button>

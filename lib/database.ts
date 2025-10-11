@@ -129,6 +129,58 @@ export async function incrementTotalDays(): Promise<boolean> {
   }
 }
 
+// Increment wins counter
+export async function incrementWins(): Promise<boolean> {
+  try {
+    const currentProgress = await getProgress()
+    if (!currentProgress) return false
+
+    const { error } = await supabase
+      .from('progress')
+      .update({
+        wins: currentProgress.wins + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1)
+
+    if (error) {
+      console.error('Error incrementing wins:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error incrementing wins:', error)
+    return false
+  }
+}
+
+// Increment losses counter
+export async function incrementLosses(): Promise<boolean> {
+  try {
+    const currentProgress = await getProgress()
+    if (!currentProgress) return false
+
+    const { error } = await supabase
+      .from('progress')
+      .update({
+        losses: currentProgress.losses + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1)
+
+    if (error) {
+      console.error('Error incrementing losses:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error incrementing losses:', error)
+    return false
+  }
+}
+
 // Reset progress (for development/testing)
 export async function resetProgress(): Promise<boolean> {
   try {

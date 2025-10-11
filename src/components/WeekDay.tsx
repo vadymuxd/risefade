@@ -18,29 +18,28 @@ export default function WeekDay({ completedDays }: WeekDayProps) {
   const keepingUp = isKeepingUpWithSchedule(completedDays)
   
   return (
-    <div className="w-full py-4 px-4">
+    <div className="w-full pt-4 px-4">
       <div className="flex justify-center items-center gap-2">
         {dayLabels.map((day, index) => {
           const isCurrent = index === mondayBasedIndex
-          
+          let style: React.CSSProperties = {}
           let dayClasses = "flex-1 py-2 rounded-lg text-sm font-medium transition-colors text-center"
-          
           if (isCurrent) {
             // Current day - color based on schedule adherence (no border)
             if (keepingUp) {
-              dayClasses += " bg-blue-100 text-blue-700"
+              style = { background: 'var(--light-blue)', color: 'var(--blue)' }
             } else {
-              dayClasses += " bg-red-100 text-red-700"
+              style = { background: 'var(--light-red)', color: 'var(--red)' }
             }
           } else {
             // Other days - white styling without border
-            dayClasses += " bg-white text-gray-600"
+            style = { background: '#fff', color: '#4B5563' } // gray-600
           }
-          
           return (
             <div
               key={index}
               className={dayClasses}
+              style={style}
             >
               {day}
             </div>

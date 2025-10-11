@@ -6,8 +6,10 @@ import DaysNavigation from '@/components/DaysNavigation';
 import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
 import WeekDay from '@/components/WeekDay';
 import AppName from '@/components/AppName';
-import { recordDayCompletion, updateWeeklySession, incrementTotalDays, resetAllProgress } from '../../lib/database';
+import BattleProgress, { BattleProgressRef } from '@/components/BattleProgress';
+import { recordDayCompletion, updateWeeklySession, incrementTotalDays, resetAllProgress, incrementWins, incrementLosses } from '../../lib/database';
 import { isKeepingUpWithSchedule } from '../../lib/scheduleUtils';
+import { checkWeeklyReset } from '../../lib/weeklyReset';
 
 export default function Home() {
   const [activeDay, setActiveDay] = useState('day1');
@@ -19,6 +21,9 @@ export default function Home() {
   
   // Ref for the CompleteDays component
   const completeDaysRef = useRef<CompleteDaysRef>(null);
+  
+  // Ref for the BattleProgress component
+  const battleProgressRef = useRef<BattleProgressRef>(null);
 
   const plans = {
     day1: {
@@ -140,7 +145,35 @@ export default function Home() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('completedDays');
       if (saved) {
-        setCompletedDays(JSON.parse(saved));
+        const savedDays = JSON.parse(saved);
+        setCompletedDays(savedDays);
+        
+        // Check for weekly reset after loading saved days
+        checkWeeklyReset(savedDays).then((resetPerformed) => {
+          if (resetPerformed) {
+            // Reset was performed, clear completed days
+            setCompletedDays([]);
+            localStorage.removeItem('completedDays');
+            setActiveDay('day1');
+            setResetTrigger(prev => prev + 1);
+            
+            // Refresh battle progress to show updated losses
+            if (battleProgressRef.current) {
+              battleProgressRef.current.refreshFromDatabase();
+            }
+          }
+        }).catch(error => {
+          console.error('Error checking weekly reset:', error);
+        });
+      } else {
+        // No saved days, still check for weekly reset
+        checkWeeklyReset([]).then((resetPerformed) => {
+          if (resetPerformed && battleProgressRef.current) {
+            battleProgressRef.current.refreshFromDatabase();
+          }
+        }).catch(error => {
+          console.error('Error checking weekly reset:', error);
+        });
       }
     }
   }, []);
@@ -198,6 +231,9 @@ export default function Home() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // Check if this completes all 3 days (wins a week)
+    const allDaysCompleted = newCompletedDays.length === 3;
+
     // Save to database
     try {
       // Get all exercise IDs for this day
@@ -211,6 +247,15 @@ export default function Home() {
       
       // Increment total days in database
       const success = await incrementTotalDays();
+      
+      // If all days completed, increment wins
+      if (allDaysCompleted) {
+        await incrementWins();
+        // Refresh battle progress
+        if (battleProgressRef.current) {
+          await battleProgressRef.current.refreshFromDatabase();
+        }
+      }
       
       if (success) {
         // Refresh the counter from database to ensure accuracy
@@ -268,6 +313,30 @@ export default function Home() {
     }
   };
 
+  // Handle testing - increment wins
+  const handleIncrementWins = async () => {
+    try {
+      await incrementWins();
+      if (battleProgressRef.current) {
+        await battleProgressRef.current.refreshFromDatabase();
+      }
+    } catch (error) {
+      console.error('Error incrementing wins:', error);
+    }
+  };
+
+  // Handle testing - increment losses
+  const handleIncrementLosses = async () => {
+    try {
+      await incrementLosses();
+      if (battleProgressRef.current) {
+        await battleProgressRef.current.refreshFromDatabase();
+      }
+    } catch (error) {
+      console.error('Error incrementing losses:', error);
+    }
+  };
+
   // Handle resetting all progress (including total days)
   const handleResetAllProgress = async () => {
     if (typeof window !== 'undefined') {
@@ -295,12 +364,15 @@ export default function Home() {
       // Trigger re-render of ExerciseCard components
       setResetTrigger(prev => prev + 1);
       
-      // Reset database progress
+      // Reset database progress (including wins/losses)
       try {
         await resetAllProgress();
-        // Refresh the total days counter from database
+        // Refresh all counters from database
         if (completeDaysRef.current) {
           await completeDaysRef.current.refreshFromDatabase();
+        }
+        if (battleProgressRef.current) {
+          await battleProgressRef.current.refreshFromDatabase();
         }
       } catch (error) {
         console.error('Error resetting all progress in database:', error);
@@ -320,6 +392,9 @@ export default function Home() {
       
       {/* Complete Days Tracker - Full Width */}
       <CompleteDays ref={completeDaysRef} />
+      
+      {/* Battle Progress - Full Width */}
+      <BattleProgress ref={battleProgressRef} />
       
       {/* Week Day Tracker - Full Width */}
       <WeekDay completedDays={completedDays} />
@@ -377,7 +452,18 @@ export default function Home() {
             <div className="mt-6 text-center">
               <button
                 onClick={handleCompleteDay}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors cursor-pointer w-full sm:w-auto"
+                className="font-semibold py-3 px-8 rounded-xl transition-colors cursor-pointer w-full sm:w-auto"
+                style={{ 
+                  backgroundColor: 'var(--blue)', 
+                  color: 'white',
+                  border: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0056CC'; // darker blue for hover
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--blue)';
+                }}
               >
                 Завершити День
               </button>
@@ -391,15 +477,55 @@ export default function Home() {
           <div className="space-y-2">
             <button
               onClick={handleResetProgress}
-              className="block text-xs text-red-500 hover:text-red-700 underline transition-colors cursor-pointer mx-auto"
+              className="block text-xs underline transition-colors cursor-pointer mx-auto"
+              style={{ color: 'var(--red)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#C53030'; // darker red for hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--red)';
+              }}
             >
               Скинути недільний прогрес
             </button>
             <button
               onClick={handleResetAllProgress}
-              className="block text-xs text-red-500 hover:text-red-700 underline transition-colors cursor-pointer mx-auto"
+              className="block text-xs underline transition-colors cursor-pointer mx-auto"
+              style={{ color: 'var(--red)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#C53030'; // darker red for hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--red)';
+              }}
             >
               Скинути весь прогрес
+            </button>
+            <button
+              onClick={handleIncrementWins}
+              className="block text-xs underline transition-colors cursor-pointer mx-auto"
+              style={{ color: 'var(--red)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#C53030'; // darker red for hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--red)';
+              }}
+            >
+              Збільшити Rise
+            </button>
+            <button
+              onClick={handleIncrementLosses}
+              className="block text-xs underline transition-colors cursor-pointer mx-auto"
+              style={{ color: 'var(--red)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#C53030'; // darker red for hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--red)';
+              }}
+            >
+              Збільшити Fade
             </button>
           </div>
         </footer>

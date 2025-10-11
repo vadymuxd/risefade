@@ -9,10 +9,10 @@ export default function AppName({ completedDays }: AppNameProps) {
   
   return (
     <div className="w-full bg-black py-4 px-4">
-      <h1 className="text-center text-4xl font-extrabold">
+      <h1 className="text-center text-5xl font-extrabold">
         {keepingUp ? (
           <>
-            <span className="text-blue-500">Rise</span>
+            <span style={{ color: 'var(--blue)' }}>Rise</span>
             <span className="text-white"> or </span>
             <span className="text-white">Fade</span>
           </>
@@ -20,7 +20,7 @@ export default function AppName({ completedDays }: AppNameProps) {
           <>
             <span className="text-white">Rise</span>
             <span className="text-white"> or </span>
-            <span className="text-red-500">Fade</span>
+            <span style={{ color: 'var(--red)' }}>Fade</span>
           </>
         )}
       </h1>

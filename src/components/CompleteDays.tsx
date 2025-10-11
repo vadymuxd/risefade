@@ -38,7 +38,7 @@ const CompleteDays = forwardRef<CompleteDaysRef>((props, ref) => {
   }))
 
   return (
-    <div className="w-full bg-black text-white text-center py-4 px-4 mb-4">
+    <div className="w-full bg-black text-white text-center pb-4 px-4">
       <p className="text-lg font-medium">
         Днів завершено: {totalDays}
       </p>
