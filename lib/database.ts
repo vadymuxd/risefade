@@ -156,6 +156,33 @@ export async function resetProgress(): Promise<boolean> {
   }
 }
 
+// Reset all progress including total days completed
+export async function resetAllProgress(): Promise<boolean> {
+  try {
+    // Delete all related data
+    await supabase.from('daily_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    await supabase.from('weekly_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    
+    // Reset ALL progress including total days
+    await supabase
+      .from('progress')
+      .update({
+        wins: 0,
+        losses: 0,
+        total_days_completed: 0,
+        current_streak: 0,
+        longest_streak: 0,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1)
+
+    return true
+  } catch (error) {
+    console.error('Error resetting all progress:', error)
+    return false
+  }
+}
+
 // Helper function to get start of current week (Monday)
 function getStartOfWeek(): string {
   const now = new Date()

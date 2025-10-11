@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import ExerciseCard from '@/components/ExerciseCard';
 import DaysNavigation from '@/components/DaysNavigation';
 import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
-import { recordDayCompletion, updateWeeklySession, incrementTotalDays } from '../../lib/database';
+import { recordDayCompletion, updateWeeklySession, incrementTotalDays, resetAllProgress } from '../../lib/database';
 
 export default function Home() {
   const [activeDay, setActiveDay] = useState('day1');
@@ -265,6 +265,46 @@ export default function Home() {
     }
   };
 
+  // Handle resetting all progress (including total days)
+  const handleResetAllProgress = async () => {
+    if (typeof window !== 'undefined') {
+      // Clear completed days
+      localStorage.removeItem('completedDays');
+      setCompletedDays([]);
+      
+      // Clear all exercise completion states
+      const allExerciseIds: string[] = [];
+      ['day1', 'day2', 'day3'].forEach(dayKey => {
+        const exerciseIds = getDayExerciseIds(dayKey);
+        allExerciseIds.push(...exerciseIds);
+      });
+      
+      allExerciseIds.forEach(id => {
+        localStorage.removeItem(id);
+      });
+      
+      // Reset exercise completions state
+      setExerciseCompletions({});
+      
+      // Reset to day 1
+      setActiveDay('day1');
+      
+      // Trigger re-render of ExerciseCard components
+      setResetTrigger(prev => prev + 1);
+      
+      // Reset database progress
+      try {
+        await resetAllProgress();
+        // Refresh the total days counter from database
+        if (completeDaysRef.current) {
+          await completeDaysRef.current.refreshFromDatabase();
+        }
+      } catch (error) {
+        console.error('Error resetting all progress in database:', error);
+      }
+    }
+  };
+
   // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return null;
@@ -338,12 +378,20 @@ export default function Home() {
         {/* Footer */}
         <footer className="text-center mt-4 text-sm text-gray-500 p-5">
           <p className="mb-3">Головне — регулярність! Навіть коротке тренування краще, ніж нічого. Успіхів!</p>
-          <button
-            onClick={handleResetProgress}
-            className="text-xs text-red-500 hover:text-red-700 underline transition-colors cursor-pointer"
-          >
-            Скинути прогрес
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={handleResetProgress}
+              className="block text-xs text-red-500 hover:text-red-700 underline transition-colors cursor-pointer mx-auto"
+            >
+              Скинути недільний прогрес
+            </button>
+            <button
+              onClick={handleResetAllProgress}
+              className="block text-xs text-red-500 hover:text-red-700 underline transition-colors cursor-pointer mx-auto"
+            >
+              Скинути весь прогрес
+            </button>
+          </div>
         </footer>
       </div>
     </div>
