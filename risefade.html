@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Персональний План Тренувань</title>
+	<style>
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+			margin: 0;
+			padding: 16px;
+			background-color: #f0f2f5;
+			color: #333;
+		}
+		.container {
+			max-width: 100%; /* На всю ширину */
+			margin: 0 auto;
+		}
+		.card {
+			background: white;
+			border-radius: 12px;
+			padding: 16px;
+			margin-bottom: 16px;
+			border: 1px solid #e2e8f0;
+		}
+		header h1 {
+			font-size: 24px;
+			font-weight: 700;
+			margin: 0 0 8px 0;
+			color: #1d4ed8;
+		}
+		header p {
+			margin: 0;
+			color: #555;
+		}
+		.tabs {
+			display: flex;
+			gap: 8px;
+			margin-bottom: 16px;
+		}
+		.tab-btn {
+			padding: 10px 16px;
+			border-radius: 8px;
+			border: 1px solid #ddd;
+			background: #fff;
+			cursor: pointer;
+			font-weight: 500;
+			transition: all 0.2s ease;
+			flex-grow: 1; /* Кнопки розтягуються */
+			text-align: center;
+		}
+		.tab-btn.active {
+			background: #2563eb;
+			color: white;
+			border-color: #2563eb;
+		}
+		.exercise-card {
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 16px;
+			align-items: center;
+			padding: 16px;
+			background: white;
+			border-radius: 12px;
+			margin-bottom: 12px;
+			border: 1px solid #e2e8f0;
+			transition: background-color 0.3s ease;
+		}
+		.exercise-card.completed {
+			background-color: #e2e8f0; /* Темний сірий фон */
+		}
+		.exercise-card.utility-card {
+			grid-template-columns: 1fr;
+		}
+		@media (min-width: 640px) {
+			.exercise-card {
+				grid-template-columns: 1fr 300px;
+			}
+			.exercise-card.utility-card {
+				grid-template-columns: 1fr;
+			}
+		}
+		.exercise-info h3 {
+			font-size: 18px;
+			margin: 0 0 4px 0;
+		}
+		.exercise-info p {
+			margin: 0;
+			color: #666;
+			font-size: 14px;
+		}
+		.video-container {
+			width: 100%;
+			aspect-ratio: 16/9;
+			border-radius: 8px;
+			overflow: hidden;
+		}
+		.video-container iframe {
+			width: 100%;
+			height: 100%;
+		}
+		.checkbox-container {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 16px;
+			grid-column: 1 / -1;
+			padding-top: 12px;
+			border-top: 1px solid #f0f2f5;
+			margin-top: 12px;
+		}
+		.utility-card .checkbox-container {
+			border-top: none;
+			padding-top: 0;
+			margin-top: 12px;
+		}
+		input[type="checkbox"] {
+			width: 20px;
+			height: 20px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<header class="card">
+			<h1>Ваш Персональний План Тренувань</h1>
+			<p>Ваш шлях до пресу та здорового тіла. Виконуйте 2-3 рази на тиждень, чергуючи дні.</p>
+		</header>
+		<div class="tabs">
+			<button data-tab="day1" class="tab-btn active">День 1</button>
+			<button data-tab="day2" class="tab-btn">День 2</button>
+			<button data-tab="day3" class="tab-btn">День 3</button>
+		</div>
+		<div id="tab-contents">
+			<!-- Вміст буде згенеровано JavaScript -->
+		</div>
+		<footer class="text-center mt-4" style="font-size: 14px; color: #777; text-align: center; padding: 20px;">
+			<p>Головне — регулярність! Навіть коротке тренування краще, ніж нічого. Успіхів!</p>
+		</footer>
+	</div>
+	<script>
+		const plans = {
+			day1: {
+				title: 'День 1: Фокус на Прес та Ноги',
+				warmup: { name: 'Розминка (5-7 хвилин)', desc: 'Обов’язково підготуйте тіло: ходьба на місці, обертання суглобами, динамічна розтяжка.' },
+				exercises: [
+					{ name: 'Присідання', reps: '3 підходи по 15 повторень', desc: 'Тримайте спину прямо, ноги на ширині плечей. Опускайтеся так, ніби сідаєте на стілець.', video: 'https://www.youtube.com/embed/l83R5PblSMA' },
+					{ name: 'Сідничний місток', reps: '3 підходи по 20 повторень', desc: 'Лежачи на спині, зігніть коліна. Піднімайте таз вгору, напружуючи сідниці.', video: 'https://www.youtube.com/embed/tqp5XQPpTxY' },
+					{ name: '"Велосипед"', reps: '3 підходи по 30 секунд', desc: 'Лежачи на спині, руки за головою. По черзі тягніться правим ліктем до лівого коліна і навпаки.', video: 'https://www.youtube.com/embed/wnuLak2onoA' },
+					{ name: 'Вправa "Мертвий жук"', reps: '3 підходи по 12 на сторону', desc: 'Лежачи на спині, повільно опустіть протилежні руку і ногу, не торкаючись підлоги.', video: 'https://www.youtube.com/embed/9RK9UUgKIQE' }
+				],
+				cooldown: { name: 'Заминка (5 хвилин)', desc: 'Обов’язково розтягніть м’язи, що працювали, особливо м’язи ніг та пресу.' }
+			},
+			day2: {
+				title: 'День 2: Кардіо та М’язи Кору',
+				warmup: { name: 'Розминка (5-7 хвилин)', desc: 'Легке кардіо для розігріву: ходьба на місці, махи руками та ногами.' },
+				exercises: [
+					{ name: 'Стрибки "Jumping Jacks"', reps: '3 підходи по 45 секунд', desc: 'Якщо стрибки викликають дискомфорт, робіть кроки по черзі.', video: 'https://www.youtube.com/embed/ttVmvj88Zwc' },
+					{ name: 'Високе піднімання колін', reps: '3 підходи по 30 секунд', desc: 'Стоячи на місці, бігайте, піднімаючи коліна якомога вище. Тримайте прес напруженим.', video: 'https://www.youtube.com/embed/sTvekaq6vOU' },
+					{ name: 'Підйоми ніг лежачи', reps: '3 підходи по 15 повторень', desc: 'Повільно піднімайте прямі ноги догори до кута 90 градусів і так само повільно опускайте.', video: 'https://www.youtube.com/embed/Wp4BlxcFTkE' },
+					{ name: 'Зворотні скручування', reps: '3 підходи по 15 повторень', desc: 'Лежачи на спині, піднімайте ноги і таз вгору так, тягнучи коліна до грудей.', video: 'https://www.youtube.com/embed/XY8KzdDcMFg' }
+				],
+				cooldown: { name: 'Заминка (5 хвилин)', desc: 'Зробіть легку розтяжку для всього тіла, щоб заспокоїти серцевий ритм.' }
+			},
+			day3: {
+				title: 'День 3: Сила Кору та Ніг',
+				warmup: { name: 'Розминка (5-7 хвилин)', desc: 'Підготуйте м’язи до роботи: кілька присідань без ваги та нахилів.' },
+				exercises: [
+					{ name: 'Випади', reps: '3 підходи по 12 на ногу', desc: 'Зробіть крок вперед і опустіться, згинаючи обидві ноги під кутом 90 градусів.', video: 'https://www.youtube.com/embed/mTrWpTHrs_Y' },
+					{ name: 'Зворотні скручування', reps: '3 підходи по 15 повторень', desc: 'Лежачи на спині, піднімайте ноги і таз вгору так, тягнучи коліна до грудей.', video: 'https://www.youtube.com/embed/XY8KzdDcMFg' },
+					{ name: 'Вправa "Мертвий жук"', reps: '3 підходи по 12 на сторону', desc: 'Лежачи на спині, повільно опустіть протилежні руку і ногу, не торкаючись підлоги.', video: 'https://www.youtube.com/embed/9RK9UUgKIQE' },
+					{ name: 'Бічна планка на лікті', reps: '3 підходи по 20-30 сек на сторону', desc: 'Лежачи на боці, підніміть тіло, спираючись на лікоть. Тіло має утворювати пряму лінію.', video: 'https://www.youtube.com/embed/mTrWpTHrs_Y' }
+				],
+				cooldown: { name: 'Заминка (5 хвилин)', desc: 'Приділіть увагу розтяжці косих м’язів живота та ніг.' }
+			}
+		};
+		const tabsContainer = document.querySelector('.tabs');
+		const contentsContainer = document.getElementById('tab-contents');
+		function renderDay(dayId) {
+			const plan = plans[dayId];
+			if (!plan) return;
+			let html = `<div id="${dayId}-content">
+				<div class="card">
+					<h2 style="font-size: 20px; font-weight: 600; text-align: center; margin-bottom: 16px;">${plan.title}</h2>`;
+			const warmupKey = `${dayId}_warmup`;
+			const isWarmupChecked = localStorage.getItem(warmupKey) === 'true';
+			html += `
+				<div class="exercise-card utility-card ${isWarmupChecked ? 'completed' : ''}">
+					<div class="exercise-info">
+						<h3>${plan.warmup.name}</h3>
+						<p style="margin-top: 4px; font-size: 13px;">${plan.warmup.desc}</p>
+					</div>
+					<div class="checkbox-container">
+						<input type="checkbox" id="${warmupKey}" data-key="${warmupKey}" ${isWarmupChecked ? 'checked' : ''}>
+						<label for="${warmupKey}">Виконано</label>
+					</div>
+				</div>
+			`;
+			plan.exercises.forEach((ex, index) => {
+				const key = `${dayId}_exercise_${index}`;
+				const isChecked = localStorage.getItem(key) === 'true';
+				html += `
+					<div class="exercise-card ${isChecked ? 'completed' : ''}">
+						<div class="exercise-info">
+							<h3>${ex.name}</h3>
+							<p>${ex.reps}</p>
+							<p style="margin-top: 4px; font-size: 13px;">${ex.desc}</p>
+						</div>
+						<div class="video-container">
+							<iframe src="${ex.video}" title="${ex.name}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+						</div>
+						<div class="checkbox-container">
+							<input type="checkbox" id="${key}" data-key="${key}" ${isChecked ? 'checked' : ''}>
+							<label for="${key}">Виконано</label>
+						</div>
+					</div>
+				`;
+			});
+			const cooldownKey = `${dayId}_cooldown`;
+			const isCooldownChecked = localStorage.getItem(cooldownKey) === 'true';
+			html += `
+				<div class="exercise-card utility-card ${isCooldownChecked ? 'completed' : ''}">
+					<div class="exercise-info">
+						<h3>${plan.cooldown.name}</h3>
+						<p style="margin-top: 4px; font-size: 13px;">${plan.cooldown.desc}</p>
+					</div>
+					<div class="checkbox-container">
+						<input type="checkbox" id="${cooldownKey}" data-key="${cooldownKey}" ${isCooldownChecked ? 'checked' : ''}>
+						<label for="${cooldownKey}">Виконано</label>
+					</div>
+				</div>
+			`;
+			html += `</div></div>`;
+			contentsContainer.innerHTML = html;
+			contentsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+				checkbox.addEventListener('change', (event) => {
+					const card = event.target.closest('.exercise-card');
+					localStorage.setItem(event.target.dataset.key, event.target.checked);
+					if (card) {
+						card.classList.toggle('completed', event.target.checked);
+					}
+				});
+			});
+		}
+		tabsContainer.addEventListener('click', (event) => {
+			const target = event.target.closest('button');
+			if (!target) return;
+			tabsContainer.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+			target.classList.add('active');
+			renderDay(target.dataset.tab);
+		});
+		renderDay('day1');
+	</script>
+</body>
+</html>

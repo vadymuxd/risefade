@@ -1,103 +1,320 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import ExerciseCard from '@/components/ExerciseCard';
+import DaysNavigation from '@/components/DaysNavigation';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeDay, setActiveDay] = useState('day1');
+  const [completedDays, setCompletedDays] = useState<string[]>([]);
+  const [exerciseCompletions, setExerciseCompletions] = useState<Record<string, boolean>>({});
+  const [canCompleteDay, setCanCompleteDay] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [resetTrigger, setResetTrigger] = useState(0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const plans = {
+    day1: {
+      title: "День 1: Фокус на Прес та Ноги",
+      warmup: { 
+        name: "Розминка (5-7 хвилин)", 
+        desc: "Обов'язково підготуйте тіло: ходьба на місці, обертання суглобами, динамічна розтяжка." 
+      },
+      exercises: [
+        { 
+          name: "Присідання", 
+          reps: "3 підходи по 15 повторень", 
+          desc: "Тримайте спину прямо, ноги на ширині плечей. Опускайтеся так, ніби сідаєте на стілець.", 
+          video: "https://www.youtube.com/embed/l83R5PblSMA" 
+        },
+        { 
+          name: "Сідничний місток", 
+          reps: "3 підходи по 20 повторень", 
+          desc: "Лежачи на спині, зігніть коліна. Піднімайте таз вгору, напружуючи сідниці.", 
+          video: "https://www.youtube.com/embed/tqp5XQPpTxY" 
+        },
+        { 
+          name: "\"Велосипед\"", 
+          reps: "3 підходи по 30 секунд", 
+          desc: "Лежачи на спині, руки за головою. По черзі тягніться правим ліктем до лівого коліна і навпаки.", 
+          video: "https://www.youtube.com/embed/wnuLak2onoA" 
+        },
+        { 
+          name: "Вправa \"Мертвий жук\"", 
+          reps: "3 підходи по 12 на сторону", 
+          desc: "Лежачи на спині, повільно опустіть протилежні руку і ногу, не торкаючись підлоги.", 
+          video: "https://www.youtube.com/embed/9RK9UUgKIQE" 
+        }
+      ],
+      cooldown: { 
+        name: "Заминка (5 хвилин)", 
+        desc: "Обов'язково розтягніть м'язи, що працювали, особливо м'язи ніг та пресу." 
+      }
+    },
+    day2: {
+      title: "День 2: Кардіо та М'язи Кору",
+      warmup: { 
+        name: "Розминка (5-7 хвилин)", 
+        desc: "Легке кардіо для розігріву: ходьба на місці, махи руками та ногами." 
+      },
+      exercises: [
+        { 
+          name: "Стрибки \"Jumping Jacks\"", 
+          reps: "3 підходи по 45 секунд", 
+          desc: "Якщо стрибки викликають дискомфорт, робіть кроки по черзі.", 
+          video: "https://www.youtube.com/embed/ttVmvj88Zwc" 
+        },
+        { 
+          name: "Високе піднімання колін", 
+          reps: "3 підходи по 30 секунд", 
+          desc: "Стоячи на місці, бігайте, піднімаючи коліна якомога вище. Тримайте прес напруженим.", 
+          video: "https://www.youtube.com/embed/sTvekaq6vOU" 
+        },
+        { 
+          name: "Підйоми ніг лежачи", 
+          reps: "3 підходи по 15 повторень", 
+          desc: "Повільно піднімайте прямі ноги догори до кута 90 градусів і так само повільно опускайте.", 
+          video: "https://www.youtube.com/embed/Wp4BlxcFTkE" 
+        },
+        { 
+          name: "Зворотні скручування", 
+          reps: "3 підходи по 15 повторень", 
+          desc: "Лежачи на спині, піднімайте ноги і таз вгору так, тягнучи коліна до грудей.", 
+          video: "https://www.youtube.com/embed/XY8KzdDcMFg" 
+        }
+      ],
+      cooldown: { 
+        name: "Заминка (5 хвилин)", 
+        desc: "Зробіть легку розтяжку для всього тіла, щоб заспокоїти серцевий ритм." 
+      }
+    },
+    day3: {
+      title: "День 3: Сила Кору та Ніг",
+      warmup: { 
+        name: "Розминка (5-7 хвилин)", 
+        desc: "Підготуйте м'язи до роботи: кілька присідань без ваги та нахилів." 
+      },
+      exercises: [
+        { 
+          name: "Випади", 
+          reps: "3 підходи по 12 на ногу", 
+          desc: "Зробіть крок вперед і опустіться, згинаючи обидві ноги під кутом 90 градусів.", 
+          video: "https://www.youtube.com/embed/mTrWpTHrs_Y" 
+        },
+        { 
+          name: "Зворотні скручування", 
+          reps: "3 підходи по 15 повторень", 
+          desc: "Лежачи на спині, піднімайте ноги і таз вгору так, тягнучи коліна до грудей.", 
+          video: "https://www.youtube.com/embed/XY8KzdDcMFg" 
+        },
+        { 
+          name: "Вправa \"Мертвий жук\"", 
+          reps: "3 підходи по 12 на сторону", 
+          desc: "Лежачи на спині, повільно опустіть протилежні руку і ногу, не торкаючись підлоги.", 
+          video: "https://www.youtube.com/embed/9RK9UUgKIQE" 
+        },
+        { 
+          name: "Бічна планка на лікті", 
+          reps: "3 підходи по 20-30 сек на сторону", 
+          desc: "Лежачи на боці, підніміть тіло, спираючись на лікоть. Тіло має утворювати пряму лінію.", 
+          video: "https://www.youtube.com/embed/mTrWpTHrs_Y" 
+        }
+      ],
+      cooldown: { 
+        name: "Заминка (5 хвилин)", 
+        desc: "Приділіть увагу розтяжці косих м'язів живота та ніг." 
+      }
+    }
+  };
+
+  // Load completed days from localStorage on mount
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('completedDays');
+      if (saved) {
+        setCompletedDays(JSON.parse(saved));
+      }
+    }
+  }, []);
+
+  // Update canCompleteDay when activeDay, completedDays, or exerciseCompletions change
+  useEffect(() => {
+    if (mounted) {
+      const dayCompleted = isDayCompleted(activeDay);
+      const dayNotInCompleted = !completedDays.includes(activeDay);
+      setCanCompleteDay(dayCompleted && dayNotInCompleted);
+    }
+  }, [activeDay, completedDays, exerciseCompletions, mounted]);
+
+  // Get all exercise IDs for a day
+  const getDayExerciseIds = (dayKey: string) => {
+    const plan = plans[dayKey as keyof typeof plans];
+    const ids = [
+      `${dayKey}_warmup`,
+      ...plan.exercises.map((_, index) => `${dayKey}_exercise_${index}`),
+      `${dayKey}_cooldown`
+    ];
+    return ids;
+  };
+
+  // Check if all exercises in a day are completed
+  const isDayCompleted = (dayKey: string) => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    
+    const exerciseIds = getDayExerciseIds(dayKey);
+    return exerciseIds.every(id => {
+      const saved = localStorage.getItem(id);
+      return saved === 'true';
+    });
+  };
+
+  // Handle exercise completion change
+  const handleExerciseCompletion = (exerciseId: string, completed: boolean) => {
+    setExerciseCompletions(prev => ({
+      ...prev,
+      [exerciseId]: completed
+    }));
+  };
+
+  // Handle completing a day
+  const handleCompleteDay = () => {
+    const newCompletedDays = [...completedDays, activeDay];
+    setCompletedDays(newCompletedDays);
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('completedDays', JSON.stringify(newCompletedDays));
+      
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Navigate to next day
+    const days = ['day1', 'day2', 'day3'];
+    const currentIndex = days.indexOf(activeDay);
+    if (currentIndex < days.length - 1) {
+      setActiveDay(days[currentIndex + 1]);
+    }
+  };
+
+  // Handle resetting all progress
+  const handleResetProgress = () => {
+    if (typeof window !== 'undefined') {
+      // Clear completed days
+      localStorage.removeItem('completedDays');
+      setCompletedDays([]);
+      
+      // Clear all exercise completion states
+      const allExerciseIds: string[] = [];
+      ['day1', 'day2', 'day3'].forEach(dayKey => {
+        const exerciseIds = getDayExerciseIds(dayKey);
+        allExerciseIds.push(...exerciseIds);
+      });
+      
+      allExerciseIds.forEach(id => {
+        localStorage.removeItem(id);
+      });
+      
+      // Reset exercise completions state
+      setExerciseCompletions({});
+      
+      // Reset to day 1
+      setActiveDay('day1');
+      
+      // Trigger re-render of ExerciseCard components
+      setResetTrigger(prev => prev + 1);
+    }
+  };
+
+  // Don't render until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 font-sans">
+      <div className="max-w-full mx-auto p-4">
+        {/* Header */}
+        <header className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
+          <h1 className="text-2xl font-bold text-blue-600 mb-2">
+            Ваш Персональний План Тренувань
+          </h1>
+          <p className="text-gray-600">
+            Ваш шлях до пресу та здорового тіла. Виконуйте 2-3 рази на тиждень, чергуючи дні.
+          </p>
+        </header>
+
+        {/* Days Navigation */}
+        <DaysNavigation 
+          activeDay={activeDay}
+          completedDays={completedDays}
+          onDayChange={setActiveDay}
+        />
+
+        {/* Content */}
+        <div>
+          <h2 className="text-xl font-semibold text-center mb-4">
+            {plans[activeDay as keyof typeof plans].title}
+          </h2>
+
+          {/* Warmup */}
+          <ExerciseCard
+            key={`${activeDay}_warmup_${resetTrigger}`}
+            id={`${activeDay}_warmup`}
+            name={plans[activeDay as keyof typeof plans].warmup.name}
+            desc={plans[activeDay as keyof typeof plans].warmup.desc}
+            isUtility={true}
+            onCompletionChange={handleExerciseCompletion}
+          />
+
+          {/* Exercises */}
+          {plans[activeDay as keyof typeof plans].exercises.map((exercise, index) => (
+            <ExerciseCard
+              key={`${activeDay}_exercise_${index}_${resetTrigger}`}
+              id={`${activeDay}_exercise_${index}`}
+              name={exercise.name}
+              reps={exercise.reps}
+              desc={exercise.desc}
+              video={exercise.video}
+              onCompletionChange={handleExerciseCompletion}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          ))}
+
+          {/* Cooldown */}
+          <ExerciseCard
+            key={`${activeDay}_cooldown_${resetTrigger}`}
+            id={`${activeDay}_cooldown`}
+            name={plans[activeDay as keyof typeof plans].cooldown.name}
+            desc={plans[activeDay as keyof typeof plans].cooldown.desc}
+            isUtility={true}
+            onCompletionChange={handleExerciseCompletion}
+          />
+
+          {/* Complete Day Button */}
+          {canCompleteDay && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={handleCompleteDay}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors cursor-pointer w-full sm:w-auto"
+              >
+                Завершити День
+              </button>
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Footer */}
+        <footer className="text-center mt-4 text-sm text-gray-500 p-5">
+          <p className="mb-3">Головне — регулярність! Навіть коротке тренування краще, ніж нічого. Успіхів!</p>
+          <button
+            onClick={handleResetProgress}
+            className="text-xs text-red-500 hover:text-red-700 underline transition-colors cursor-pointer"
+          >
+            Скинути прогрес
+          </button>
+        </footer>
+      </div>
     </div>
   );
 }
