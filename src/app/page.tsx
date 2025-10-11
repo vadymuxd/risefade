@@ -278,12 +278,19 @@ export default function Home() {
       // Record day completion in database
       await recordDayCompletion(activeDay, exerciseIds);
       
-      // Update weekly session with completed days - this will trigger automatic progress updates
+      // Update weekly session with completed days
       await updateWeeklySession(newCompletedDays);
       
-      // Refresh battle progress if week is completed
-      if (allDaysCompleted && battleProgressRef.current) {
-        await battleProgressRef.current.refreshFromDatabase();
+      // LOGIC 1: Always increment total_days_completed for each day completed
+      await incrementTotalDays();
+      
+      // LOGIC 2: Only increment wins if ALL 3 days of current week are completed
+      if (allDaysCompleted) {
+        await incrementWins();
+        // Refresh battle progress
+        if (battleProgressRef.current) {
+          await battleProgressRef.current.refreshFromDatabase();
+        }
       }
       
       // Refresh the counter from database to ensure accuracy
