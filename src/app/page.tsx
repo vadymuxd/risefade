@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import ExerciseCard from '@/components/ExerciseCard';
 import DaysNavigation from '@/components/DaysNavigation';
+import DatabaseTest from '../../components/DatabaseTest';
 
 export default function Home() {
   const [activeDay, setActiveDay] = useState('day1');
@@ -245,6 +246,9 @@ export default function Home() {
           </p>
         </header>
 
+        {/* Database Test - Remove this after testing */}
+        <DatabaseTest />
+
         {/* Days Navigation */}
         <DaysNavigation 
           activeDay={activeDay}
@@ -254,7 +258,7 @@ export default function Home() {
 
         {/* Content */}
         <div>
-          <h2 className="text-xl font-semibold text-center mb-4">
+          <h2 className="text-2xl font-bold text-center mb-4">
             {plans[activeDay as keyof typeof plans].title}
           </h2>
 
