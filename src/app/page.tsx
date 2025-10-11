@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import confetti from 'canvas-confetti';
 import ExerciseCard from '@/components/ExerciseCard';
 import DaysNavigation from '@/components/DaysNavigation';
 import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
@@ -219,8 +220,45 @@ export default function Home() {
     }));
   };
 
+  // Confetti animation function
+  const triggerConfetti = () => {
+    const colors = ['var(--blue)', 'var(--red)', 'var(--light-blue)', 'var(--light-red)'];
+    
+    // Simple confetti burst
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#007AFF', '#F75656', '#A9D2FF', '#FFD6D6']
+    });
+    
+    // Additional burst with different timing
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#007AFF', '#F75656', '#A9D2FF', '#FFD6D6']
+      });
+    }, 250);
+    
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#007AFF', '#F75656', '#A9D2FF', '#FFD6D6']
+      });
+    }, 400);
+  };
+
   // Handle completing a day
   const handleCompleteDay = async () => {
+    // Trigger confetti animation immediately when button is clicked
+    triggerConfetti();
+    
     const newCompletedDays = [...completedDays, activeDay];
     setCompletedDays(newCompletedDays);
     

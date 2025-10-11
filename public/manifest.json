@@ -1,0 +1,23 @@
+{
+  "name": "RiseFade - Персональний План Тренувань",
+  "short_name": "RiseFade",
+  "description": "Ваш шлях до пресу та здорового тіла. Домашні тренування 3 дні на тиждень.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#007AFF",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
