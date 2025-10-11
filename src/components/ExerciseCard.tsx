@@ -44,10 +44,27 @@ export default function ExerciseCard({
     }
   };
 
+  const handleCardClick = () => {
+    const newCompleted = !isCompleted;
+    setIsCompleted(newCompleted);
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(id, newCompleted.toString());
+    }
+    
+    if (onCompletionChange) {
+      onCompletionChange(id, newCompleted);
+    }
+  };
+
   return (
-    <div className={`rounded-xl p-4 mb-3 transition-colors ${
-      isCompleted ? '' : 'bg-white'
-    }`} style={isCompleted ? { backgroundColor: '#DCDFE5' } : {}}>
+    <div 
+      className={`rounded-xl p-4 mb-3 transition-colors cursor-pointer ${
+        isCompleted ? '' : 'bg-white'
+      }`} 
+      style={isCompleted ? { backgroundColor: '#DCDFE5' } : {}}
+      onClick={handleCardClick}
+    >
       <div className={`${isUtility ? 'grid-cols-1' : 'grid grid-cols-1 sm:grid-cols-[1fr_300px]'} gap-4 items-center`}>
         <div>
           <h3 className="text-lg font-bold mb-1">{name}</h3>
@@ -61,7 +78,10 @@ export default function ExerciseCard({
         </div>
         
         {video && !isUtility && (
-          <div className="w-full aspect-video rounded-lg overflow-hidden">
+          <div 
+            className="w-full aspect-video rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <iframe
               src={video}
               title={name}
@@ -73,13 +93,14 @@ export default function ExerciseCard({
         )}
       </div>
       
-  <div className="flex items-center gap-2 pt-3 mt-3">
+      <div className="flex items-center gap-2 pt-3 mt-3">
         <input 
           type="checkbox" 
           id={id}
           className="w-5 h-5 cursor-pointer"
           checked={isCompleted}
           onChange={handleCheckboxChange}
+          onClick={(e) => e.stopPropagation()}
         />
         <label htmlFor={id} className="text-base cursor-pointer">Виконано</label>
       </div>
