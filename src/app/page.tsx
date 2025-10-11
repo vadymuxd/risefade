@@ -5,6 +5,7 @@ import ExerciseCard from '@/components/ExerciseCard';
 import DaysNavigation from '@/components/DaysNavigation';
 import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
 import WeekDay from '@/components/WeekDay';
+import AppName from '@/components/AppName';
 import { recordDayCompletion, updateWeeklySession, incrementTotalDays, resetAllProgress } from '../../lib/database';
 import { isKeepingUpWithSchedule } from '../../lib/scheduleUtils';
 
@@ -314,6 +315,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
+      {/* App Name - Full Width */}
+      <AppName completedDays={completedDays} />
+      
       {/* Complete Days Tracker - Full Width */}
       <CompleteDays ref={completeDaysRef} />
       
