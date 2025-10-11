@@ -51,7 +51,12 @@ export default function ExerciseCard({
       <div className={`${isUtility ? 'grid-cols-1' : 'grid grid-cols-1 sm:grid-cols-[1fr_300px]'} gap-4 items-center`}>
         <div>
           <h3 className="text-lg font-bold mb-1">{name}</h3>
-          {reps && <p className="text-gray-700 mb-1">{reps}</p>}
+          {reps && (
+            <>
+              <p className="text-sm text-gray-700 mb-2">{reps}</p>
+              <hr className="border-t border-gray-300 mb-2 opacity-50" />
+            </>
+          )}
           <p className="text-sm text-gray-600">{desc}</p>
         </div>
         

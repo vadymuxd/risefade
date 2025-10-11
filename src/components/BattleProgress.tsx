@@ -5,7 +5,11 @@ export interface BattleProgressRef {
   refreshFromDatabase: () => Promise<void>
 }
 
-const BattleProgress = forwardRef<BattleProgressRef>((props, ref) => {
+interface BattleProgressProps {
+  keepingUpWithSchedule?: boolean
+}
+
+const BattleProgress = forwardRef<BattleProgressRef, BattleProgressProps>(({ keepingUpWithSchedule = true }, ref) => {
   const [wins, setWins] = useState<number>(0)
   const [losses, setLosses] = useState<number>(0)
 
@@ -49,7 +53,9 @@ const BattleProgress = forwardRef<BattleProgressRef>((props, ref) => {
               <div
                 className="w-full h-full"
                 style={{
-                  backgroundColor: isActive ? 'var(--blue)' : '#666666',
+                  backgroundColor: isActive 
+                    ? (keepingUpWithSchedule ? 'var(--blue)' : '#ffffff')
+                    : '#666666',
                   mask: 'url(/Rise.svg) no-repeat center/contain',
                   WebkitMask: 'url(/Rise.svg) no-repeat center/contain'
                 }}
@@ -67,7 +73,9 @@ const BattleProgress = forwardRef<BattleProgressRef>((props, ref) => {
               <div
                 className="w-full h-full"
                 style={{
-                  backgroundColor: isActive ? 'var(--red)' : '#666666',
+                  backgroundColor: isActive 
+                    ? (keepingUpWithSchedule ? '#ffffff' : 'var(--red)')
+                    : '#666666',
                   mask: 'url(/Fade.svg) no-repeat center/contain',
                   WebkitMask: 'url(/Fade.svg) no-repeat center/contain'
                 }}

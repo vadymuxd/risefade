@@ -430,7 +430,7 @@ export default function Home() {
       <CompleteDays ref={completeDaysRef} />
       
       {/* Battle Progress - Full Width */}
-      <BattleProgress ref={battleProgressRef} />
+      <BattleProgress ref={battleProgressRef} keepingUpWithSchedule={isKeepingUpWithSchedule(completedDays)} />
       
       {/* Week Day Tracker - Full Width */}
       <WeekDay completedDays={completedDays} />
