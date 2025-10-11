@@ -1,6 +1,5 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { getProgress } from '../../lib/database'
-import type { Progress } from '../../lib/database'
 
 export interface CompleteDaysRef {
   incrementDays: () => void

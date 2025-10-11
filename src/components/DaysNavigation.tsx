@@ -21,7 +21,6 @@ export default function DaysNavigation({ activeDay, completedDays, onDayChange, 
   };
 
   const getButtonStyles = (dayKey: string) => {
-    const status = getDayStatus(dayKey);
     return 'flex-1 py-3 px-4 rounded-lg border font-medium transition-all cursor-pointer';
   };
 

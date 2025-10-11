@@ -179,15 +179,6 @@ export default function Home() {
     }
   }, []);
 
-  // Update canCompleteDay when activeDay, completedDays, or exerciseCompletions change
-  useEffect(() => {
-    if (mounted) {
-      const dayCompleted = isDayCompleted(activeDay);
-      const dayNotInCompleted = !completedDays.includes(activeDay);
-      setCanCompleteDay(dayCompleted && dayNotInCompleted);
-    }
-  }, [activeDay, completedDays, exerciseCompletions, mounted]);
-
   // Get all exercise IDs for a day
   const getDayExerciseIds = (dayKey: string) => {
     const plan = plans[dayKey as keyof typeof plans];
@@ -212,6 +203,15 @@ export default function Home() {
     });
   };
 
+  // Update canCompleteDay when activeDay, completedDays, or exerciseCompletions change
+  useEffect(() => {
+    if (mounted) {
+      const dayCompleted = isDayCompleted(activeDay);
+      const dayNotInCompleted = !completedDays.includes(activeDay);
+      setCanCompleteDay(dayCompleted && dayNotInCompleted);
+    }
+  }, [activeDay, completedDays, exerciseCompletions, mounted, isDayCompleted]);
+
   // Handle exercise completion change
   const handleExerciseCompletion = (exerciseId: string, completed: boolean) => {
     setExerciseCompletions(prev => ({
@@ -222,8 +222,6 @@ export default function Home() {
 
   // Confetti animation function
   const triggerConfetti = () => {
-    const colors = ['var(--blue)', 'var(--red)', 'var(--light-blue)', 'var(--light-red)'];
-    
     // Simple confetti burst
     confetti({
       particleCount: 100,

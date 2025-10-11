@@ -23,7 +23,7 @@ export default function WeekDay({ completedDays }: WeekDayProps) {
         {dayLabels.map((day, index) => {
           const isCurrent = index === mondayBasedIndex
           let style: React.CSSProperties = {}
-          let dayClasses = "flex-1 py-2 rounded-lg text-sm font-medium transition-colors text-center"
+          const dayClasses = "flex-1 py-2 rounded-lg text-sm font-medium transition-colors text-center"
           if (isCurrent) {
             // Current day - color based on schedule adherence (no border)
             if (keepingUp) {
