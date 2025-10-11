@@ -101,6 +101,34 @@ export async function recordDayCompletion(dayKey: string, exerciseIds: string[])
   return data
 }
 
+// Increment total days completed
+export async function incrementTotalDays(): Promise<boolean> {
+  try {
+    // First get current count
+    const currentProgress = await getProgress()
+    if (!currentProgress) return false
+
+    // Increment by 1
+    const { error } = await supabase
+      .from('progress')
+      .update({
+        total_days_completed: currentProgress.total_days_completed + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1)
+
+    if (error) {
+      console.error('Error incrementing total days:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error incrementing total days:', error)
+    return false
+  }
+}
+
 // Reset progress (for development/testing)
 export async function resetProgress(): Promise<boolean> {
   try {

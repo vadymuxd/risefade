@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ExerciseCard from '@/components/ExerciseCard';
 import DaysNavigation from '@/components/DaysNavigation';
-import DatabaseTest from '../../components/DatabaseTest';
+import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
+import { recordDayCompletion, updateWeeklySession, incrementTotalDays } from '../../lib/database';
 
 export default function Home() {
   const [activeDay, setActiveDay] = useState('day1');
@@ -12,6 +13,9 @@ export default function Home() {
   const [canCompleteDay, setCanCompleteDay] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
+  
+  // Ref for the CompleteDays component
+  const completeDaysRef = useRef<CompleteDaysRef>(null);
 
   const plans = {
     day1: {
@@ -180,7 +184,7 @@ export default function Home() {
   };
 
   // Handle completing a day
-  const handleCompleteDay = () => {
+  const handleCompleteDay = async () => {
     const newCompletedDays = [...completedDays, activeDay];
     setCompletedDays(newCompletedDays);
     
@@ -189,6 +193,39 @@ export default function Home() {
       
       // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Save to database
+    try {
+      // Get all exercise IDs for this day
+      const exerciseIds = getDayExerciseIds(activeDay);
+      
+      // Record day completion in database
+      await recordDayCompletion(activeDay, exerciseIds);
+      
+      // Update weekly session with completed days
+      await updateWeeklySession(newCompletedDays);
+      
+      // Increment total days in database
+      const success = await incrementTotalDays();
+      
+      if (success) {
+        // Refresh the counter from database to ensure accuracy
+        if (completeDaysRef.current) {
+          await completeDaysRef.current.refreshFromDatabase();
+        }
+      } else {
+        // Fallback: just increment UI if database fails
+        if (completeDaysRef.current) {
+          completeDaysRef.current.incrementDays();
+        }
+      }
+    } catch (error) {
+      console.error('Error saving day completion to database:', error);
+      // Fallback: just increment UI if database fails
+      if (completeDaysRef.current) {
+        completeDaysRef.current.incrementDays();
+      }
     }
 
     // Navigate to next day
@@ -235,20 +272,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
+      {/* Complete Days Tracker - Full Width */}
+      <CompleteDays ref={completeDaysRef} />
+      
       <div className="max-w-full mx-auto p-4">
-        {/* Header */}
-        <header className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
-          <h1 className="text-2xl font-bold text-blue-600 mb-2">
-            Ваш Персональний План Тренувань
-          </h1>
-          <p className="text-gray-600">
-            Ваш шлях до пресу та здорового тіла. Виконуйте 2-3 рази на тиждень, чергуючи дні.
-          </p>
-        </header>
-
-        {/* Database Test - Remove this after testing */}
-        <DatabaseTest />
-
         {/* Days Navigation */}
         <DaysNavigation 
           activeDay={activeDay}
