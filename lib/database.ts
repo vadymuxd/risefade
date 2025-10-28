@@ -129,6 +129,35 @@ export async function incrementTotalDays(): Promise<boolean> {
   }
 }
 
+// Decrement total days completed
+export async function decrementTotalDays(): Promise<boolean> {
+  try {
+    // First get current count
+    const currentProgress = await getProgress()
+    if (!currentProgress) return false
+
+    // Decrement by 1, but don't go below 0
+    const newCount = Math.max(0, currentProgress.total_days_completed - 1)
+    const { error } = await supabase
+      .from('progress')
+      .update({
+        total_days_completed: newCount,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1)
+
+    if (error) {
+      console.error('Error decrementing total days:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error decrementing total days:', error)
+    return false
+  }
+}
+
 // Increment wins counter
 export async function incrementWins(): Promise<boolean> {
   try {

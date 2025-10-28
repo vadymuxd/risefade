@@ -4,6 +4,37 @@
 
 import { incrementLosses } from './database'
 
+// Helper function to get start of current week (Monday)
+function getStartOfWeek(): string {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Adjust for Monday start
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + diff)
+  monday.setHours(0, 0, 0, 0)
+  return monday.toISOString().split('T')[0]
+}
+
+// Helper function to clear all exercise completions from localStorage
+function clearAllExerciseCompletions(): void {
+  const days = ['day1', 'day2', 'day3']
+  const exerciseCounts = [4, 4, 4] // Number of exercises per day (warmup + exercises + cooldown)
+  
+  days.forEach((day, dayIndex) => {
+    // Clear warmup
+    localStorage.removeItem(`${day}_warmup`)
+    
+    // Clear exercises (adjust based on your actual exercise counts)
+    // For day1: 4 exercises, day2: 4 exercises, day3: 4 exercises
+    for (let i = 0; i < exerciseCounts[dayIndex]; i++) {
+      localStorage.removeItem(`${day}_exercise_${i}`)
+    }
+    
+    // Clear cooldown
+    localStorage.removeItem(`${day}_cooldown`)
+  })
+}
+
 export const checkWeeklyReset = async (completedDays: string[]): Promise<boolean> => {
   try {
     // Get current date
@@ -33,6 +64,9 @@ export const checkWeeklyReset = async (completedDays: string[]): Promise<boolean
       await incrementLosses()
     }
 
+    // Clear all exercise completions from localStorage
+    clearAllExerciseCompletions()
+
     // Reset completed days (this should be done in the main component)
     // Mark that we've reset this week
     localStorage.setItem(lastResetKey, currentWeekStart)
@@ -42,17 +76,6 @@ export const checkWeeklyReset = async (completedDays: string[]): Promise<boolean
     console.error('Error in weekly reset:', error)
     return false
   }
-}
-
-// Helper function to get start of current week (Monday)
-function getStartOfWeek(): string {
-  const now = new Date()
-  const dayOfWeek = now.getDay()
-  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Adjust for Monday start
-  const monday = new Date(now)
-  monday.setDate(now.getDate() + diff)
-  monday.setHours(0, 0, 0, 0)
-  return monday.toISOString().split('T')[0]
 }
 
 // Function to manually trigger weekly reset (for testing)

@@ -8,7 +8,7 @@ import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
 import WeekDay from '@/components/WeekDay';
 import AppName from '@/components/AppName';
 import BattleProgress, { BattleProgressRef } from '@/components/BattleProgress';
-import { recordDayCompletion, updateWeeklySession, incrementTotalDays, resetAllProgress, incrementWins, incrementLosses } from '../../lib/database';
+import { recordDayCompletion, updateWeeklySession, incrementTotalDays, decrementTotalDays, resetAllProgress, incrementWins, incrementLosses } from '../../lib/database';
 import { isKeepingUpWithSchedule } from '../../lib/scheduleUtils';
 import { checkWeeklyReset } from '../../lib/weeklyReset';
 
@@ -127,15 +127,15 @@ export default function Home() {
           video: "https://www.youtube.com/embed/9RK9UUgKIQE" 
         },
         { 
-          name: "Бічна планка на лікті", 
-          reps: "3 підходи по 20-30 сек на сторону", 
-          desc: "Лежачи на боці, підніміть тіло, спираючись на лікоть. Тіло має утворювати пряму лінію.", 
-          video: "https://www.youtube.com/embed/mTrWpTHrs_Y" 
+          name: "Планка", 
+          reps: "3 підходи по 30-45 секунд", 
+          desc: "Спирайтеся на передпліччя та носки ніг. Тримайте тіло прямо, не прогинайте поперек та не піднімайте таз вгору. Напружуйте прес та сідниці.", 
+          video: "https://www.youtube.com/embed/pSHjTRCQxIw" 
         }
       ],
       cooldown: { 
         name: "Заминка (5 хвилин)", 
-        desc: "Приділіть увагу розтяжці косих м'язів живота та ніг." 
+        desc: "Приділіть увагу розтяжці м'язів живота та ніг." 
       }
     }
   };
@@ -366,6 +366,30 @@ export default function Home() {
     }
   };
 
+  // Handle testing - increment days
+  const handleIncrementDays = async () => {
+    try {
+      await incrementTotalDays();
+      if (completeDaysRef.current) {
+        await completeDaysRef.current.refreshFromDatabase();
+      }
+    } catch (error) {
+      console.error('Error incrementing days:', error);
+    }
+  };
+
+  // Handle testing - decrement days
+  const handleDecrementDays = async () => {
+    try {
+      await decrementTotalDays();
+      if (completeDaysRef.current) {
+        await completeDaysRef.current.refreshFromDatabase();
+      }
+    } catch (error) {
+      console.error('Error decrementing days:', error);
+    }
+  };
+
   // Handle resetting all progress (including total days)
   const handleResetAllProgress = async () => {
     if (typeof window !== 'undefined') {
@@ -555,6 +579,32 @@ export default function Home() {
               }}
             >
               Збільшити Fade
+            </button>
+            <button
+              onClick={handleIncrementDays}
+              className="block text-xs underline transition-colors cursor-pointer mx-auto"
+              style={{ color: 'var(--red)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#C53030'; // darker red for hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--red)';
+              }}
+            >
+              Збільшити дні
+            </button>
+            <button
+              onClick={handleDecrementDays}
+              className="block text-xs underline transition-colors cursor-pointer mx-auto"
+              style={{ color: 'var(--red)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#C53030'; // darker red for hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--red)';
+              }}
+            >
+              Зменьшити дні
             </button>
           </div>
         </footer>
