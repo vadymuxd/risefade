@@ -6,7 +6,12 @@ export interface CompleteDaysRef {
   refreshFromDatabase: () => Promise<void>
 }
 
-const CompleteDays = forwardRef<CompleteDaysRef>((props, ref) => {
+interface CompleteDaysProps {
+  onIncrement?: () => void
+  onDecrement?: () => void
+}
+
+const CompleteDays = forwardRef<CompleteDaysRef, CompleteDaysProps>(({ onIncrement, onDecrement }, ref) => {
   const [totalDays, setTotalDays] = useState<number>(0)
 
   // Load total days from database on mount
@@ -38,9 +43,29 @@ const CompleteDays = forwardRef<CompleteDaysRef>((props, ref) => {
 
   return (
     <div className="w-full bg-black text-white text-center pb-4 px-4">
-      <p className="text-lg font-medium">
-        Днів завершено: {totalDays}
-      </p>
+      <div className="flex items-center justify-between w-full">
+        {onDecrement && (
+          <button
+            onClick={onDecrement}
+            className="w-7 h-7 flex items-center justify-center opacity-20 hover:opacity-100 transition-opacity text-white font-bold text-xl"
+            aria-label="Зменшити дні"
+          >
+            −
+          </button>
+        )}
+        <p className="text-lg font-medium">
+          Днів завершено: {totalDays}
+        </p>
+        {onIncrement && (
+          <button
+            onClick={onIncrement}
+            className="w-7 h-7 flex items-center justify-center opacity-20 hover:opacity-100 transition-opacity text-white font-bold text-xl"
+            aria-label="Збільшити дні"
+          >
+            +
+          </button>
+        )}
+      </div>
     </div>
   )
 })
