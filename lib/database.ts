@@ -184,6 +184,34 @@ export async function incrementWins(): Promise<boolean> {
   }
 }
 
+// Decrement wins counter
+export async function decrementWins(): Promise<boolean> {
+  try {
+    const currentProgress = await getProgress()
+    if (!currentProgress) return false
+
+    // Decrement by 1, but don't go below 0
+    const newCount = Math.max(0, currentProgress.wins - 1)
+    const { error } = await supabase
+      .from('progress')
+      .update({
+        wins: newCount,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1)
+
+    if (error) {
+      console.error('Error decrementing wins:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error decrementing wins:', error)
+    return false
+  }
+}
+
 // Increment losses counter
 export async function incrementLosses(): Promise<boolean> {
   try {
@@ -206,6 +234,34 @@ export async function incrementLosses(): Promise<boolean> {
     return true
   } catch (error) {
     console.error('Error incrementing losses:', error)
+    return false
+  }
+}
+
+// Decrement losses counter
+export async function decrementLosses(): Promise<boolean> {
+  try {
+    const currentProgress = await getProgress()
+    if (!currentProgress) return false
+
+    // Decrement by 1, but don't go below 0
+    const newCount = Math.max(0, currentProgress.losses - 1)
+    const { error } = await supabase
+      .from('progress')
+      .update({
+        losses: newCount,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1)
+
+    if (error) {
+      console.error('Error decrementing losses:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error decrementing losses:', error)
     return false
   }
 }

@@ -8,7 +8,7 @@ import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
 import WeekDay from '@/components/WeekDay';
 import AppName from '@/components/AppName';
 import BattleProgress, { BattleProgressRef } from '@/components/BattleProgress';
-import { recordDayCompletion, updateWeeklySession, incrementTotalDays, decrementTotalDays, resetAllProgress, incrementWins, incrementLosses } from '../../lib/database';
+import { recordDayCompletion, updateWeeklySession, incrementTotalDays, decrementTotalDays, resetAllProgress, incrementWins, decrementWins, incrementLosses, decrementLosses } from '../../lib/database';
 import { isKeepingUpWithSchedule } from '../../lib/scheduleUtils';
 import { checkWeeklyReset } from '../../lib/weeklyReset';
 
@@ -354,6 +354,18 @@ export default function Home() {
     }
   };
 
+  // Handle testing - decrement wins
+  const handleDecrementWins = async () => {
+    try {
+      await decrementWins();
+      if (battleProgressRef.current) {
+        await battleProgressRef.current.refreshFromDatabase();
+      }
+    } catch (error) {
+      console.error('Error decrementing wins:', error);
+    }
+  };
+
   // Handle testing - increment losses
   const handleIncrementLosses = async () => {
     try {
@@ -363,6 +375,18 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error incrementing losses:', error);
+    }
+  };
+
+  // Handle testing - decrement losses
+  const handleDecrementLosses = async () => {
+    try {
+      await decrementLosses();
+      if (battleProgressRef.current) {
+        await battleProgressRef.current.refreshFromDatabase();
+      }
+    } catch (error) {
+      console.error('Error decrementing losses:', error);
     }
   };
 
@@ -527,13 +551,15 @@ export default function Home() {
         {/* Footer */}
         <footer className="text-center mt-4 text-sm text-gray-500 p-5">
           <p className="mb-3">Головне — регулярність! Навіть коротке тренування краще, ніж нічого. Успіхів!</p>
-          <div className="space-y-2">
+          
+          {/* Reset buttons */}
+          <div className="space-y-2 mb-4">
             <button
               onClick={handleResetProgress}
               className="block text-xs underline transition-colors cursor-pointer mx-auto"
               style={{ color: 'var(--red)' }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#C53030'; // darker red for hover
+                e.currentTarget.style.color = '#C53030';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color = 'var(--red)';
@@ -546,7 +572,7 @@ export default function Home() {
               className="block text-xs underline transition-colors cursor-pointer mx-auto"
               style={{ color: 'var(--red)' }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#C53030'; // darker red for hover
+                e.currentTarget.style.color = '#C53030';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color = 'var(--red)';
@@ -554,58 +580,66 @@ export default function Home() {
             >
               Скинути весь прогрес
             </button>
-            <button
-              onClick={handleIncrementWins}
-              className="block text-xs underline transition-colors cursor-pointer mx-auto"
-              style={{ color: 'var(--red)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#C53030'; // darker red for hover
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--red)';
-              }}
-            >
-              Збільшити Rise
-            </button>
-            <button
-              onClick={handleIncrementLosses}
-              className="block text-xs underline transition-colors cursor-pointer mx-auto"
-              style={{ color: 'var(--red)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#C53030'; // darker red for hover
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--red)';
-              }}
-            >
-              Збільшити Fade
-            </button>
-            <button
-              onClick={handleIncrementDays}
-              className="block text-xs underline transition-colors cursor-pointer mx-auto"
-              style={{ color: 'var(--red)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#C53030'; // darker red for hover
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--red)';
-              }}
-            >
-              Збільшити дні
-            </button>
-            <button
-              onClick={handleDecrementDays}
-              className="block text-xs underline transition-colors cursor-pointer mx-auto"
-              style={{ color: 'var(--red)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#C53030'; // darker red for hover
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--red)';
-              }}
-            >
-              Зменьшити дні
-            </button>
+          </div>
+
+          {/* Counter controls */}
+          <div className="space-y-3">
+            {/* Rise controls */}
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={handleDecrementWins}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-700 font-bold"
+                aria-label="Зменшити Rise"
+              >
+                −
+              </button>
+              <span className="text-xs font-medium min-w-[60px]">Rise</span>
+              <button
+                onClick={handleIncrementWins}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-700 font-bold"
+                aria-label="Збільшити Rise"
+              >
+                +
+              </button>
+            </div>
+
+            {/* Fade controls */}
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={handleDecrementLosses}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-700 font-bold"
+                aria-label="Зменшити Fade"
+              >
+                −
+              </button>
+              <span className="text-xs font-medium min-w-[60px]">Fade</span>
+              <button
+                onClick={handleIncrementLosses}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-700 font-bold"
+                aria-label="Збільшити Fade"
+              >
+                +
+              </button>
+            </div>
+
+            {/* Days controls */}
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={handleDecrementDays}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-700 font-bold"
+                aria-label="Зменшити дні"
+              >
+                −
+              </button>
+              <span className="text-xs font-medium min-w-[60px]">Days</span>
+              <button
+                onClick={handleIncrementDays}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-700 font-bold"
+                aria-label="Збільшити дні"
+              >
+                +
+              </button>
+            </div>
           </div>
         </footer>
       </div>

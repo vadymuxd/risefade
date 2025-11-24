@@ -41,7 +41,7 @@ export const checkWeeklyReset = async (completedDays: string[]): Promise<boolean
     const now = new Date()
     const currentDay = now.getDay() // 0 = Sunday, 1 = Monday, etc.
     
-    // Check if it's Monday (day 1)
+    // Only check for reset on Monday
     if (currentDay !== 1) {
       return false // Not Monday, no reset needed
     }
@@ -52,14 +52,21 @@ export const checkWeeklyReset = async (completedDays: string[]): Promise<boolean
     const currentWeekStart = getStartOfWeek()
     
     // If we already reset this week, don't reset again
+    // This is the critical check that ensures losses are only incremented ONCE per week
     if (lastReset === currentWeekStart) {
       return false
     }
 
-    // Check if all days were completed last week
+    // At this point, we know:
+    // 1. It's Monday
+    // 2. We haven't reset for this week yet
+    // 3. The completedDays array represents last week's progress
+    
+    // Check if all 3 days were completed last week
     const allDaysCompleted = completedDays.length === 3
 
-    // If not all days completed, increment losses
+    // If not all days completed last week, increment losses ONCE
+    // This will only happen once per week because we set lastResetKey immediately after
     if (!allDaysCompleted) {
       await incrementLosses()
     }
@@ -67,8 +74,8 @@ export const checkWeeklyReset = async (completedDays: string[]): Promise<boolean
     // Clear all exercise completions from localStorage
     clearAllExerciseCompletions()
 
-    // Reset completed days (this should be done in the main component)
-    // Mark that we've reset this week
+    // Mark that we've reset this week - this prevents losses from being incremented again
+    // until the next Monday when currentWeekStart will be different
     localStorage.setItem(lastResetKey, currentWeekStart)
     
     return true // Reset performed
