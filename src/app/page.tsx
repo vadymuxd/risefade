@@ -140,6 +140,21 @@ export default function Home() {
     }
   };
 
+  // Helper function to get the next uncompleted day
+  const getNextUncompletedDay = (completedDaysList: string[]) => {
+    const days = ['day1', 'day2', 'day3'];
+    
+    // Find the first day that is not completed
+    for (const day of days) {
+      if (!completedDaysList.includes(day)) {
+        return day;
+      }
+    }
+    
+    // If all days are completed, return day3 (last day)
+    return 'day3';
+  };
+
   // Load completed days from localStorage on mount
   useEffect(() => {
     setMounted(true);
@@ -162,9 +177,16 @@ export default function Home() {
             if (battleProgressRef.current) {
               battleProgressRef.current.refreshFromDatabase();
             }
+          } else {
+            // No reset performed, set active day to next uncompleted day
+            const nextDay = getNextUncompletedDay(savedDays);
+            setActiveDay(nextDay);
           }
         }).catch(error => {
           console.error('Error checking weekly reset:', error);
+          // On error, still try to set the next uncompleted day
+          const nextDay = getNextUncompletedDay(savedDays);
+          setActiveDay(nextDay);
         });
       } else {
         // No saved days, still check for weekly reset
@@ -172,8 +194,12 @@ export default function Home() {
           if (resetPerformed && battleProgressRef.current) {
             battleProgressRef.current.refreshFromDatabase();
           }
+          // Start at day1 since no days are completed
+          setActiveDay('day1');
         }).catch(error => {
           console.error('Error checking weekly reset:', error);
+          // Start at day1 on error
+          setActiveDay('day1');
         });
       }
     }
