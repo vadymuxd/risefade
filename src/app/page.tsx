@@ -172,10 +172,10 @@ export default function Home() {
           video: 'https://www.youtube.com/embed/uUGDRwge4F8'
         },
         {
-          name: 'Скручування з гантелею (на прес)',
+          name: 'Підйоми ніг лежачи',
           reps: '3 підходи по 12-15 повторень',
-          desc: 'Поперек притиснутий. Піднімайте грудну клітку, не тягніть шию.',
-          video: 'https://www.youtube.com/embed/wjLpKyYzZLs'
+          desc: 'Лежачи на спині, піднімайте прямі ноги до 90°. Поперек притиснутий до підлоги.',
+          video: 'https://www.youtube.com/embed/JB2oyawG9KI'
         },
         {
           name: 'Планка',
@@ -206,7 +206,7 @@ export default function Home() {
           name: 'Румунська тяга з гантелями (RDL)',
           reps: '3 підходи по 10-12 повторень',
           desc: 'Відводьте таз назад, спина нейтральна. Відчуйте натяг задньої поверхні стегна.',
-          video: 'https://www.youtube.com/embed/MNuFYFilg_M'
+          video: 'https://www.youtube.com/embed/5TDG4JkeZfc'
         },
         {
           name: 'Жим гантелей над головою сидячи/стоячи',
@@ -255,7 +255,7 @@ export default function Home() {
           name: 'Віджимання вузьким хватом (на трицепс)',
           reps: '3 підходи по 8-12 повторень',
           desc: 'Лікті близько до тіла. Трицепс має «горіти» наприкінці підходу.',
-          video: 'https://www.youtube.com/embed/nkBQ7wVOg0Y'
+          video: 'https://www.youtube.com/embed/UQhomOsA7Ko'
         },
         {
           name: '«Велосипед» (прес)',
@@ -267,7 +267,7 @@ export default function Home() {
           name: 'Планка з торканням плечей',
           reps: '2-3 підходи по 20-30 торкань (разом)',
           desc: 'Таз не гойдається. Повільний контрольований темп.',
-          video: 'https://www.youtube.com/embed/_L4DAzGK1GY'
+          video: 'https://www.youtube.com/embed/2IgdtGocmn0'
         }
       ],
       cooldown: {
