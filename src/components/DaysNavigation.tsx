@@ -47,7 +47,7 @@ export default function DaysNavigation({ activeDay, completedDays, onDayChange, 
         <button
           key={dayKey}
           onClick={() => onDayChange(dayKey)}
-          className={getButtonStyles(dayKey)}
+          className={getButtonStyles()}
           style={getButtonStyle(dayKey)}
           onMouseEnter={(e) => {
             if (getDayStatus(dayKey) === 'inactive') {

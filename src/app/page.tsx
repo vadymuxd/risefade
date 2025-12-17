@@ -9,7 +9,7 @@ import WeekDay from '@/components/WeekDay';
 import AppName from '@/components/AppName';
 import BattleProgress, { BattleProgressRef } from '@/components/BattleProgress';
 import ProgrammesNavigation from '@/components/ProgrammesNavigation';
-import { recordDayCompletion, updateWeeklySession, incrementTotalDays, decrementTotalDays, resetProgress, incrementWins, decrementWins, incrementLosses, decrementLosses, getProgrammes, getOrCreateProgress } from '../../lib/database';
+import { recordDayCompletion, updateWeeklySession, incrementTotalDays, decrementTotalDays, incrementWins, decrementWins, incrementLosses, decrementLosses, getProgrammes, getOrCreateProgress } from '../../lib/database';
 import { isKeepingUpWithSchedule } from '../../lib/scheduleUtils';
 import { checkWeeklyReset } from '../../lib/weeklyReset';
 import { createProgramme, getActiveProgramme, setActiveProgramme } from '../../lib/programmeUtils';
@@ -440,7 +440,7 @@ export default function Home() {
     const dayCompleted = isDayCompleted();
     const dayNotInCompleted = !completedDays.includes(activeDay);
     setCanCompleteDay(dayCompleted && dayNotInCompleted);
-  }, [activeDay, completedDays, exerciseCompletions, mounted]);
+  }, [activeDay, completedDays, exerciseCompletions, mounted, getDayExerciseIds]);
 
   // Handle exercise completion change
   const handleExerciseCompletion = (exerciseId: string, completed: boolean) => {
@@ -543,29 +543,6 @@ export default function Home() {
     }
   };
 
-  // Clear all exercise completion states helper
-  const clearExerciseStates = () => {
-    const allExerciseIds: string[] = [];
-      ['day1', 'day2', 'day3'].forEach(dayKey => {
-        const exerciseIds = getDayExerciseIds(dayKey);
-        allExerciseIds.push(...exerciseIds);
-      });
-      
-      allExerciseIds.forEach(id => {
-        localStorage.removeItem(id);
-      });
-      
-      // Reset exercise completions state
-      setExerciseCompletions({});
-      
-      // Reset to day 1
-      setActiveDay('day1');
-      
-      // Trigger re-render of ExerciseCard components
-      setResetTrigger(prev => prev + 1);
-    }
-  };
-
   // Handle testing - increment wins
   const handleIncrementWins = async () => {
     try {
@@ -635,43 +612,6 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error decrementing days:', error);
-    }
-  };
-
-  // Helper to clear all exercise completion states
-  const clearAllExerciseStates = () => {
-    const allExerciseIds: string[] = [];
-      ['day1', 'day2', 'day3'].forEach(dayKey => {
-        const exerciseIds = getDayExerciseIds(dayKey);
-        allExerciseIds.push(...exerciseIds);
-      });
-      
-      allExerciseIds.forEach(id => {
-        localStorage.removeItem(id);
-      });
-      
-      // Reset exercise completions state
-      setExerciseCompletions({});
-      
-      // Reset to day 1
-      setActiveDay('day1');
-      
-      // Trigger re-render of ExerciseCard components
-      setResetTrigger(prev => prev + 1);
-      
-      // Reset database progress (including wins/losses)
-      try {
-        await resetProgress(currentProgrammeId);
-        // Refresh all counters from database
-        if (completeDaysRef.current) {
-          await completeDaysRef.current.refreshFromDatabase();
-        }
-        if (battleProgressRef.current) {
-          await battleProgressRef.current.refreshFromDatabase();
-        }
-      } catch (error) {
-        console.error('Error resetting all progress in database:', error);
-      }
     }
   };
 
