@@ -20,7 +20,7 @@ export default function DaysNavigation({ activeDay, completedDays, onDayChange, 
     return 'inactive';
   };
 
-  const getButtonStyles = (dayKey: string) => {
+  const getButtonStyles = () => {
     return 'flex-1 py-3 px-4 rounded-lg border font-medium transition-all cursor-pointer';
   };
 

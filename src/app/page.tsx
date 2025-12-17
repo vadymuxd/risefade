@@ -420,27 +420,27 @@ export default function Home() {
     return ids;
   };
 
-  // Check if all exercises in a day are completed
-  const isDayCompleted = (dayKey: string) => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-    
-    const exerciseIds = getDayExerciseIds(dayKey);
-    return exerciseIds.every(id => {
-      const saved = localStorage.getItem(id);
-      return saved === 'true';
-    });
-  };
-
   // Update canCompleteDay when activeDay, completedDays, or exerciseCompletions change
   useEffect(() => {
-    if (mounted) {
-      const dayCompleted = isDayCompleted(activeDay);
-      const dayNotInCompleted = !completedDays.includes(activeDay);
-      setCanCompleteDay(dayCompleted && dayNotInCompleted);
-    }
-  }, [activeDay, completedDays, exerciseCompletions, mounted, isDayCompleted]);
+    if (!mounted) return;
+    
+    // Check if all exercises in the active day are completed
+    const isDayCompleted = () => {
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
+      const exerciseIds = getDayExerciseIds(activeDay);
+      return exerciseIds.every(id => {
+        const saved = localStorage.getItem(id);
+        return saved === 'true';
+      });
+    };
+    
+    const dayCompleted = isDayCompleted();
+    const dayNotInCompleted = !completedDays.includes(activeDay);
+    setCanCompleteDay(dayCompleted && dayNotInCompleted);
+  }, [activeDay, completedDays, exerciseCompletions, mounted]);
 
   // Handle exercise completion change
   const handleExerciseCompletion = (exerciseId: string, completed: boolean) => {
@@ -543,15 +543,9 @@ export default function Home() {
     }
   };
 
-  // Handle resetting all progress
-  const handleResetProgress = () => {
-    if (typeof window !== 'undefined') {
-      // Clear completed days
-      localStorage.removeItem(getCompletedDaysKey(currentProgrammeId));
-      setCompletedDays([]);
-      
-      // Clear all exercise completion states
-      const allExerciseIds: string[] = [];
+  // Clear all exercise completion states helper
+  const clearExerciseStates = () => {
+    const allExerciseIds: string[] = [];
       ['day1', 'day2', 'day3'].forEach(dayKey => {
         const exerciseIds = getDayExerciseIds(dayKey);
         allExerciseIds.push(...exerciseIds);
@@ -644,15 +638,9 @@ export default function Home() {
     }
   };
 
-  // Handle resetting current programme progress (including total days)
-  const handleResetAllProgress = async () => {
-    if (typeof window !== 'undefined') {
-      // Clear completed days
-      localStorage.removeItem(getCompletedDaysKey(currentProgrammeId));
-      setCompletedDays([]);
-      
-      // Clear all exercise completion states
-      const allExerciseIds: string[] = [];
+  // Helper to clear all exercise completion states
+  const clearAllExerciseStates = () => {
+    const allExerciseIds: string[] = [];
       ['day1', 'day2', 'day3'].forEach(dayKey => {
         const exerciseIds = getDayExerciseIds(dayKey);
         allExerciseIds.push(...exerciseIds);

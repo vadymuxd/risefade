@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react'
 import { getProgress } from '../../lib/database'
 
 export interface BattleProgressRef {
@@ -18,12 +18,7 @@ const BattleProgress = forwardRef<BattleProgressRef, BattleProgressProps>(({ pro
   const [wins, setWins] = useState<number>(0)
   const [losses, setLosses] = useState<number>(0)
 
-  // Load progress from database on mount
-  useEffect(() => {
-    loadProgress()
-  }, [programmeId])
-
-  const loadProgress = async () => {
+  const loadProgress = useCallback(async () => {
     try {
       const progress = await getProgress(programmeId)
       if (progress) {
@@ -33,7 +28,12 @@ const BattleProgress = forwardRef<BattleProgressRef, BattleProgressProps>(({ pro
     } catch (error) {
       console.error('Error loading battle progress:', error)
     }
-  }
+  }, [programmeId])
+
+  // Load progress from database on mount
+  useEffect(() => {
+    loadProgress()
+  }, [loadProgress])
 
   // Expose refresh function to parent component
   useImperativeHandle(ref, () => ({

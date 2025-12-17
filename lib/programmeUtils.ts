@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Programme } from './supabase'
+import type { Programme, UserProgress } from './supabase'
 
 /**
  * Programme Management Utilities
@@ -189,7 +189,7 @@ export async function getAllProgrammes(includeInactive = false): Promise<Program
 // Get programme with progress
 export async function getProgrammeWithProgress(id: number): Promise<{
   programme: Programme | null
-  progress: any | null
+  progress: UserProgress | null
 }> {
   const { data: programme, error: progError } = await supabase
     .from('programmes')
@@ -247,7 +247,7 @@ export async function getProgrammeStats(id: number) {
     .single()
 
   // Get total weeks
-  const { data: weekSessions, count: totalWeeks } = await supabase
+  const { count: totalWeeks } = await supabase
     .from('weekly_sessions')
     .select('*', { count: 'exact', head: false })
     .eq('programme_id', id)

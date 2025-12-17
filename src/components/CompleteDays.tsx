@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react'
 import { getProgress } from '../../lib/database'
 
 export interface CompleteDaysRef {
@@ -15,12 +15,7 @@ interface CompleteDaysProps {
 const CompleteDays = forwardRef<CompleteDaysRef, CompleteDaysProps>(({ programmeId = 1, onIncrement, onDecrement }, ref) => {
   const [totalDays, setTotalDays] = useState<number>(0)
 
-  // Load total days from database on mount
-  useEffect(() => {
-    loadProgress()
-  }, [programmeId])
-
-  const loadProgress = async () => {
+  const loadProgress = useCallback(async () => {
     try {
       const progress = await getProgress(programmeId)
       if (progress) {
@@ -29,7 +24,12 @@ const CompleteDays = forwardRef<CompleteDaysRef, CompleteDaysProps>(({ programme
     } catch (error) {
       console.error('Error loading progress:', error)
     }
-  }
+  }, [programmeId])
+
+  // Load total days from database on mount
+  useEffect(() => {
+    loadProgress()
+  }, [loadProgress])
 
   // Function to increment total days locally
   const incrementDays = () => {
