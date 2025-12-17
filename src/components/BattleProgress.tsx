@@ -6,6 +6,7 @@ export interface BattleProgressRef {
 }
 
 interface BattleProgressProps {
+  programmeId?: number
   keepingUpWithSchedule?: boolean
   onIncrementWins?: () => void
   onDecrementWins?: () => void
@@ -13,18 +14,18 @@ interface BattleProgressProps {
   onDecrementLosses?: () => void
 }
 
-const BattleProgress = forwardRef<BattleProgressRef, BattleProgressProps>(({ keepingUpWithSchedule = true, onIncrementWins, onDecrementWins, onIncrementLosses, onDecrementLosses }, ref) => {
+const BattleProgress = forwardRef<BattleProgressRef, BattleProgressProps>(({ programmeId = 1, keepingUpWithSchedule = true, onIncrementWins, onDecrementWins, onIncrementLosses, onDecrementLosses }, ref) => {
   const [wins, setWins] = useState<number>(0)
   const [losses, setLosses] = useState<number>(0)
 
   // Load progress from database on mount
   useEffect(() => {
     loadProgress()
-  }, [])
+  }, [programmeId])
 
   const loadProgress = async () => {
     try {
-      const progress = await getProgress()
+      const progress = await getProgress(programmeId)
       if (progress) {
         setWins(progress.wins)
         setLosses(progress.losses)

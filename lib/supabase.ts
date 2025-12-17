@@ -6,9 +6,19 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types for TypeScript
+export interface Programme {
+  id: number
+  name: string
+  description?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface UserProgress {
   id: string
   user_id: string
+  programme_id: number
   wins: number
   losses: number
   total_days_completed: number
@@ -21,6 +31,7 @@ export interface UserProgress {
 export interface WeeklySession {
   id: string
   user_id: string
+  programme_id: number
   week_start_date: string
   is_completed: boolean
   completed_days: string[]

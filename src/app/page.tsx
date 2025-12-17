@@ -8,11 +8,16 @@ import CompleteDays, { CompleteDaysRef } from '@/components/CompleteDays';
 import WeekDay from '@/components/WeekDay';
 import AppName from '@/components/AppName';
 import BattleProgress, { BattleProgressRef } from '@/components/BattleProgress';
-import { recordDayCompletion, updateWeeklySession, incrementTotalDays, decrementTotalDays, resetAllProgress, incrementWins, decrementWins, incrementLosses, decrementLosses } from '../../lib/database';
+import ProgrammesNavigation from '@/components/ProgrammesNavigation';
+import { recordDayCompletion, updateWeeklySession, incrementTotalDays, decrementTotalDays, resetProgress, incrementWins, decrementWins, incrementLosses, decrementLosses, getProgrammes, getOrCreateProgress } from '../../lib/database';
 import { isKeepingUpWithSchedule } from '../../lib/scheduleUtils';
 import { checkWeeklyReset } from '../../lib/weeklyReset';
+import { createProgramme, getActiveProgramme, setActiveProgramme } from '../../lib/programmeUtils';
+import type { Programme } from '../../lib/supabase';
 
 export default function Home() {
+  const [programmes, setProgrammes] = useState<Programme[]>([]);
+  const [currentProgrammeId, setCurrentProgrammeId] = useState<number>(1);
   const [activeDay, setActiveDay] = useState('day1');
   const [completedDays, setCompletedDays] = useState<string[]>([]);
   const [exerciseCompletions, setExerciseCompletions] = useState<Record<string, boolean>>({});
@@ -26,7 +31,7 @@ export default function Home() {
   // Ref for the BattleProgress component
   const battleProgressRef = useRef<BattleProgressRef>(null);
 
-  const plans = {
+  const pressPlans = {
     day1: {
       title: "День 1: Фокус на Прес та Ноги",
       warmup: { 
@@ -140,6 +145,148 @@ export default function Home() {
     }
   };
 
+  const fullBodyPlans = {
+    day1: {
+      title: 'День 1: Руки + Прес (гантелі вдома)',
+      warmup: {
+        name: 'Розминка (5-7 хвилин)',
+        desc: "Легка кардіо-розминка + мобільність плечей та зап'ясть: оберти руками, нахили, присідання без ваги."
+      },
+      exercises: [
+        {
+          name: 'Підйом гантелей на біцепс (по черзі)',
+          reps: '3 підходи по 10-12 повторень на руку',
+          desc: 'Лікті притиснуті до корпусу, рух контрольований. Останні повторення мають бути важкими, але технічними.',
+          video: 'https://www.youtube.com/embed/sAq_ocpRh_I'
+        },
+        {
+          name: 'Французький жим гантелі над головою (на трицепс)',
+          reps: '3 підходи по 10-12 повторень',
+          desc: 'Тримайте лікті близько до голови. Опускайте гантель повільно, піднімайте без ривків.',
+          video: 'https://www.youtube.com/embed/YbX7Wd8jQ-Q'
+        },
+        {
+          name: 'Жим гантелей лежачи на підлозі (floor press)',
+          reps: '3 підходи по 8-12 повторень',
+          desc: 'Лопатки зведені, лікті під кутом ~45°. Контроль вниз, потужний підйом.',
+          video: 'https://www.youtube.com/embed/uUGDRwge4F8'
+        },
+        {
+          name: 'Скручування з гантелею (на прес)',
+          reps: '3 підходи по 12-15 повторень',
+          desc: 'Поперек притиснутий. Піднімайте грудну клітку, не тягніть шию.',
+          video: 'https://www.youtube.com/embed/wjLpKyYzZLs'
+        },
+        {
+          name: 'Планка',
+          reps: '3 підходи по 30-45 секунд',
+          desc: 'Тіло рівне, прес напружений. Дихайте рівно.',
+          video: 'https://www.youtube.com/embed/pSHjTRCQxIw'
+        }
+      ],
+      cooldown: {
+        name: 'Заминка (5 хвилин)',
+        desc: "Легка розтяжка рук, грудних м'язів та живота."
+      }
+    },
+    day2: {
+      title: 'День 2: Ноги + Плечі + Прес',
+      warmup: {
+        name: 'Розминка (5-7 хвилин)',
+        desc: 'Мобільність тазостегнових та плечей + 1-2 хвилини легких присідань/випадів без ваги.'
+      },
+      exercises: [
+        {
+          name: 'Присідання з гантелею (Goblet squat)',
+          reps: '4 підходи по 10-12 повторень',
+          desc: 'Тримайте гантель біля грудей, спина рівна. Коліна в напрямку носків.',
+          video: 'https://www.youtube.com/embed/qaQPfi8f27E'
+        },
+        {
+          name: 'Румунська тяга з гантелями (RDL)',
+          reps: '3 підходи по 10-12 повторень',
+          desc: 'Відводьте таз назад, спина нейтральна. Відчуйте натяг задньої поверхні стегна.',
+          video: 'https://www.youtube.com/embed/MNuFYFilg_M'
+        },
+        {
+          name: 'Жим гантелей над головою сидячи/стоячи',
+          reps: '3 підходи по 8-12 повторень',
+          desc: 'Не прогинайте поперек. Корпус стабільний, рух рівномірний.',
+          video: 'https://www.youtube.com/embed/qEwKCR5JCog'
+        },
+        {
+          name: 'Підйоми ніг лежачи (на нижній прес)',
+          reps: '3 підходи по 10-15 повторень',
+          desc: 'Поперек притиснутий. Якщо важко — зігніть коліна.',
+          video: 'https://www.youtube.com/embed/JB2oyawG9KI'
+        },
+        {
+          name: 'Бокова планка',
+          reps: '2-3 підходи по 20-35 секунд на бік',
+          desc: 'Тримайте таз рівно, не провалюйтеся у плечі.',
+          video: 'https://www.youtube.com/embed/K2VljzCC16g'
+        }
+      ],
+      cooldown: {
+        name: 'Заминка (5 хвилин)',
+        desc: 'Розтяжка стегон/сідниць + плечей.'
+      }
+    },
+    day3: {
+      title: 'День 3: Спина + Руки + Прес',
+      warmup: {
+        name: 'Розминка (5-7 хвилин)',
+        desc: 'Легка мобільність лопаток/плечей + нахили з прямою спиною без ваги.'
+      },
+      exercises: [
+        {
+          name: 'Тяга гантелі в нахилі однією рукою',
+          reps: '3 підходи по 10-12 повторень на руку',
+          desc: 'Спина рівна, лопатка працює. Тягніть лікоть до тазу.',
+          video: 'https://www.youtube.com/embed/roCP6wCXPqo'
+        },
+        {
+          name: 'Підйом гантелей «молот» (hammer curls)',
+          reps: '3 підходи по 10-12 повторень',
+          desc: 'Нейтральний хват. Контрольний рух, без розгойдування.',
+          video: 'https://www.youtube.com/embed/zC3nLlEvin4'
+        },
+        {
+          name: 'Віджимання вузьким хватом (на трицепс)',
+          reps: '3 підходи по 8-12 повторень',
+          desc: 'Лікті близько до тіла. Трицепс має «горіти» наприкінці підходу.',
+          video: 'https://www.youtube.com/embed/nkBQ7wVOg0Y'
+        },
+        {
+          name: '«Велосипед» (прес)',
+          reps: '3 підходи по 20-30 повторень (разом)',
+          desc: 'Не тягніть шию. Скручування за рахунок преса.',
+          video: 'https://www.youtube.com/embed/9FGilxCbdz8'
+        },
+        {
+          name: 'Планка з торканням плечей',
+          reps: '2-3 підходи по 20-30 торкань (разом)',
+          desc: 'Таз не гойдається. Повільний контрольований темп.',
+          video: 'https://www.youtube.com/embed/_L4DAzGK1GY'
+        }
+      ],
+      cooldown: {
+        name: 'Заминка (5 хвилин)',
+        desc: "Розтяжка спини (поза дитини), біцепса/трицепса та живота."
+      }
+    }
+  };
+
+  const getActiveProgrammeName = () => {
+    const p = programmes.find(pr => pr.id === currentProgrammeId);
+    return p?.name || 'Прес';
+  };
+
+  const plans = getActiveProgrammeName() === 'Все тіло' ? fullBodyPlans : pressPlans;
+
+  const getProgrammePrefix = (programmeId: number) => `p${programmeId}_`;
+  const getCompletedDaysKey = (programmeId: number) => `completedDays_programme_${programmeId}`;
+
   // Helper function to get the next uncompleted day
   const getNextUncompletedDay = (completedDaysList: string[]) => {
     const days = ['day1', 'day2', 'day3'];
@@ -155,63 +302,120 @@ export default function Home() {
     return 'day3';
   };
 
-  // Load completed days from localStorage on mount
+  // Load programmes and ensure "Все тіло" exists
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('completedDays');
-      if (saved) {
-        const savedDays = JSON.parse(saved);
-        setCompletedDays(savedDays);
-        
-        // Check for weekly reset after loading saved days
-        checkWeeklyReset(savedDays).then((resetPerformed) => {
-          if (resetPerformed) {
-            // Reset was performed, clear completed days
-            setCompletedDays([]);
-            localStorage.removeItem('completedDays');
-            setActiveDay('day1');
-            setResetTrigger(prev => prev + 1);
-            
-            // Refresh battle progress to show updated losses
-            if (battleProgressRef.current) {
-              battleProgressRef.current.refreshFromDatabase();
-            }
-          } else {
-            // No reset performed, set active day to next uncompleted day
-            const nextDay = getNextUncompletedDay(savedDays);
-            setActiveDay(nextDay);
+
+    const migrateLegacyLocalStorageToProgramme1 = () => {
+      if (typeof window === 'undefined') return;
+
+      // Migrate completed days
+      const legacyCompleted = localStorage.getItem('completedDays');
+      const programme1Key = getCompletedDaysKey(1);
+      if (legacyCompleted && !localStorage.getItem(programme1Key)) {
+        localStorage.setItem(programme1Key, legacyCompleted);
+      }
+
+      // Migrate exercise completion keys (day1_*, day2_*, day3_*) to p1_ prefix
+      const keysToCopy: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith('p')) continue; // already programme-scoped
+        if (/^day(1|2|3)_(warmup|cooldown|exercise_\d+)$/.test(key)) {
+          keysToCopy.push(key);
+        }
+      }
+
+      keysToCopy.forEach((key) => {
+        const value = localStorage.getItem(key);
+        if (value === null) return;
+        localStorage.setItem(`${getProgrammePrefix(1)}${key}`, value);
+      });
+    };
+
+    const initProgrammes = async () => {
+      try {
+        migrateLegacyLocalStorageToProgramme1();
+
+        let list = await getProgrammes();
+
+        // Ensure the second programme exists
+        const hasFullBody = list.some(p => p.name === 'Все тіло');
+        if (!hasFullBody) {
+          await createProgramme('Все тіло', 'Домашня програма на все тіло з гантелями', { isActive: false });
+          list = await getProgrammes();
+        }
+
+        // Ensure exactly one programme is active
+        let active = list.find(p => p.is_active);
+        if (!active) {
+          const activeFromDb = await getActiveProgramme();
+          active = activeFromDb || list.find(p => p.name === 'Прес') || list[0];
+          if (active) {
+            await setActiveProgramme(active.id);
+            list = await getProgrammes();
           }
-        }).catch(error => {
-          console.error('Error checking weekly reset:', error);
-          // On error, still try to set the next uncompleted day
-          const nextDay = getNextUncompletedDay(savedDays);
-          setActiveDay(nextDay);
-        });
-      } else {
-        // No saved days, still check for weekly reset
-        checkWeeklyReset([]).then((resetPerformed) => {
-          if (resetPerformed && battleProgressRef.current) {
+        }
+
+        setProgrammes(list);
+        if (active) {
+          setCurrentProgrammeId(active.id);
+        }
+
+        // Ensure progress row exists for the active programme
+        if (active) {
+          await getOrCreateProgress(active.id);
+        }
+      } catch (e) {
+        console.error('Error initializing programmes:', e);
+      }
+    };
+
+    initProgrammes();
+  }, []);
+
+  // Load completed days from localStorage when programme changes
+  useEffect(() => {
+    if (!mounted || typeof window === 'undefined') return;
+
+    const key = getCompletedDaysKey(currentProgrammeId);
+    const saved = localStorage.getItem(key);
+    const savedDays: string[] = saved ? JSON.parse(saved) : [];
+    setCompletedDays(savedDays);
+
+    checkWeeklyReset(savedDays, currentProgrammeId)
+      .then((resetPerformed) => {
+        if (resetPerformed) {
+          setCompletedDays([]);
+          localStorage.removeItem(key);
+          setActiveDay('day1');
+          setExerciseCompletions({});
+          setResetTrigger(prev => prev + 1);
+
+          if (battleProgressRef.current) {
             battleProgressRef.current.refreshFromDatabase();
           }
-          // Start at day1 since no days are completed
-          setActiveDay('day1');
-        }).catch(error => {
-          console.error('Error checking weekly reset:', error);
-          // Start at day1 on error
-          setActiveDay('day1');
-        });
-      }
-    }
-  }, []);
+        } else {
+          const nextDay = getNextUncompletedDay(savedDays);
+          setActiveDay(nextDay);
+        }
+      })
+      .catch((error) => {
+        console.error('Error checking weekly reset:', error);
+        const nextDay = getNextUncompletedDay(savedDays);
+        setActiveDay(nextDay);
+      });
+  }, [mounted, currentProgrammeId]);
 
   // Get all exercise IDs for a day
   const getDayExerciseIds = (dayKey: string) => {
     const plan = plans[dayKey as keyof typeof plans];
+    const prefix = getProgrammePrefix(currentProgrammeId);
     const ids = [
-      `${dayKey}_warmup`,
-      ...plan.exercises.map((_, index) => `${dayKey}_exercise_${index}`),
-      `${dayKey}_cooldown`
+      `${prefix}${dayKey}_warmup`,
+      ...plan.exercises.map((_, index) => `${prefix}${dayKey}_exercise_${index}`),
+      `${prefix}${dayKey}_cooldown`
     ];
     return ids;
   };
@@ -287,7 +491,7 @@ export default function Home() {
     setCompletedDays(newCompletedDays);
     
     if (typeof window !== 'undefined') {
-      localStorage.setItem('completedDays', JSON.stringify(newCompletedDays));
+      localStorage.setItem(getCompletedDaysKey(currentProgrammeId), JSON.stringify(newCompletedDays));
       
       // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -302,17 +506,17 @@ export default function Home() {
       const exerciseIds = getDayExerciseIds(activeDay);
       
       // Record day completion in database
-      await recordDayCompletion(activeDay, exerciseIds);
+      await recordDayCompletion(activeDay, exerciseIds, currentProgrammeId);
       
       // Update weekly session with completed days
-      await updateWeeklySession(newCompletedDays);
+      await updateWeeklySession(newCompletedDays, currentProgrammeId);
       
       // LOGIC 1: Always increment total_days_completed for each day completed
-      await incrementTotalDays();
+      await incrementTotalDays(currentProgrammeId);
       
       // LOGIC 2: Only increment wins if ALL 3 days of current week are completed
       if (allDaysCompleted) {
-        await incrementWins();
+        await incrementWins(currentProgrammeId);
         // Refresh battle progress
         if (battleProgressRef.current) {
           await battleProgressRef.current.refreshFromDatabase();
@@ -343,7 +547,7 @@ export default function Home() {
   const handleResetProgress = () => {
     if (typeof window !== 'undefined') {
       // Clear completed days
-      localStorage.removeItem('completedDays');
+      localStorage.removeItem(getCompletedDaysKey(currentProgrammeId));
       setCompletedDays([]);
       
       // Clear all exercise completion states
@@ -371,7 +575,7 @@ export default function Home() {
   // Handle testing - increment wins
   const handleIncrementWins = async () => {
     try {
-      await incrementWins();
+      await incrementWins(currentProgrammeId);
       if (battleProgressRef.current) {
         await battleProgressRef.current.refreshFromDatabase();
       }
@@ -383,7 +587,7 @@ export default function Home() {
   // Handle testing - decrement wins
   const handleDecrementWins = async () => {
     try {
-      await decrementWins();
+      await decrementWins(currentProgrammeId);
       if (battleProgressRef.current) {
         await battleProgressRef.current.refreshFromDatabase();
       }
@@ -395,7 +599,7 @@ export default function Home() {
   // Handle testing - increment losses
   const handleIncrementLosses = async () => {
     try {
-      await incrementLosses();
+      await incrementLosses(currentProgrammeId);
       if (battleProgressRef.current) {
         await battleProgressRef.current.refreshFromDatabase();
       }
@@ -407,7 +611,7 @@ export default function Home() {
   // Handle testing - decrement losses
   const handleDecrementLosses = async () => {
     try {
-      await decrementLosses();
+      await decrementLosses(currentProgrammeId);
       if (battleProgressRef.current) {
         await battleProgressRef.current.refreshFromDatabase();
       }
@@ -419,7 +623,7 @@ export default function Home() {
   // Handle testing - increment days
   const handleIncrementDays = async () => {
     try {
-      await incrementTotalDays();
+      await incrementTotalDays(currentProgrammeId);
       if (completeDaysRef.current) {
         await completeDaysRef.current.refreshFromDatabase();
       }
@@ -431,7 +635,7 @@ export default function Home() {
   // Handle testing - decrement days
   const handleDecrementDays = async () => {
     try {
-      await decrementTotalDays();
+      await decrementTotalDays(currentProgrammeId);
       if (completeDaysRef.current) {
         await completeDaysRef.current.refreshFromDatabase();
       }
@@ -440,11 +644,11 @@ export default function Home() {
     }
   };
 
-  // Handle resetting all progress (including total days)
+  // Handle resetting current programme progress (including total days)
   const handleResetAllProgress = async () => {
     if (typeof window !== 'undefined') {
       // Clear completed days
-      localStorage.removeItem('completedDays');
+      localStorage.removeItem(getCompletedDaysKey(currentProgrammeId));
       setCompletedDays([]);
       
       // Clear all exercise completion states
@@ -469,7 +673,7 @@ export default function Home() {
       
       // Reset database progress (including wins/losses)
       try {
-        await resetAllProgress();
+        await resetProgress(currentProgrammeId);
         // Refresh all counters from database
         if (completeDaysRef.current) {
           await completeDaysRef.current.refreshFromDatabase();
@@ -483,6 +687,29 @@ export default function Home() {
     }
   };
 
+  const handleProgrammeChange = async (programmeId: number) => {
+    if (programmeId === currentProgrammeId) return;
+
+    try {
+      const ok = await setActiveProgramme(programmeId);
+      if (!ok) return;
+
+      setCurrentProgrammeId(programmeId);
+      // Re-fetch programmes so is_active flags are accurate
+      const list = await getProgrammes();
+      setProgrammes(list);
+
+      // Ensure progress exists for the switched programme
+      await getOrCreateProgress(programmeId);
+
+      // Reset per-programme UI state
+      setExerciseCompletions({});
+      setResetTrigger(prev => prev + 1);
+    } catch (e) {
+      console.error('Error switching programme:', e);
+    }
+  };
+
   // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return null;
@@ -492,10 +719,18 @@ export default function Home() {
     <div className="min-h-screen bg-gray-100 font-sans">
       {/* App Name - Full Width */}
       <AppName completedDays={completedDays} />
+
+      {/* Programmes Navigation - Full Width */}
+      <ProgrammesNavigation
+        programmes={programmes}
+        activeProgrammeId={currentProgrammeId}
+        onProgrammeChange={handleProgrammeChange}
+      />
       
       {/* Complete Days Tracker - Full Width */}
       <CompleteDays 
         ref={completeDaysRef} 
+        programmeId={currentProgrammeId}
         onIncrement={handleIncrementDays}
         onDecrement={handleDecrementDays}
       />
@@ -503,6 +738,7 @@ export default function Home() {
       {/* Battle Progress - Full Width */}
       <BattleProgress 
         ref={battleProgressRef} 
+        programmeId={currentProgrammeId}
         keepingUpWithSchedule={isKeepingUpWithSchedule(completedDays)}
         onIncrementWins={handleIncrementWins}
         onDecrementWins={handleDecrementWins}
@@ -530,8 +766,8 @@ export default function Home() {
 
           {/* Warmup */}
           <ExerciseCard
-            key={`${activeDay}_warmup_${resetTrigger}`}
-            id={`${activeDay}_warmup`}
+            key={`${currentProgrammeId}_${activeDay}_warmup_${resetTrigger}`}
+            id={`${getProgrammePrefix(currentProgrammeId)}${activeDay}_warmup`}
             name={plans[activeDay as keyof typeof plans].warmup.name}
             desc={plans[activeDay as keyof typeof plans].warmup.desc}
             isUtility={true}
@@ -541,8 +777,8 @@ export default function Home() {
           {/* Exercises */}
           {plans[activeDay as keyof typeof plans].exercises.map((exercise, index) => (
             <ExerciseCard
-              key={`${activeDay}_exercise_${index}_${resetTrigger}`}
-              id={`${activeDay}_exercise_${index}`}
+              key={`${currentProgrammeId}_${activeDay}_exercise_${index}_${resetTrigger}`}
+              id={`${getProgrammePrefix(currentProgrammeId)}${activeDay}_exercise_${index}`}
               name={exercise.name}
               reps={exercise.reps}
               desc={exercise.desc}
@@ -553,8 +789,8 @@ export default function Home() {
 
           {/* Cooldown */}
           <ExerciseCard
-            key={`${activeDay}_cooldown_${resetTrigger}`}
-            id={`${activeDay}_cooldown`}
+            key={`${currentProgrammeId}_${activeDay}_cooldown_${resetTrigger}`}
+            id={`${getProgrammePrefix(currentProgrammeId)}${activeDay}_cooldown`}
             name={plans[activeDay as keyof typeof plans].cooldown.name}
             desc={plans[activeDay as keyof typeof plans].cooldown.desc}
             isUtility={true}

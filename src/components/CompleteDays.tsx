@@ -7,21 +7,22 @@ export interface CompleteDaysRef {
 }
 
 interface CompleteDaysProps {
+  programmeId?: number
   onIncrement?: () => void
   onDecrement?: () => void
 }
 
-const CompleteDays = forwardRef<CompleteDaysRef, CompleteDaysProps>(({ onIncrement, onDecrement }, ref) => {
+const CompleteDays = forwardRef<CompleteDaysRef, CompleteDaysProps>(({ programmeId = 1, onIncrement, onDecrement }, ref) => {
   const [totalDays, setTotalDays] = useState<number>(0)
 
   // Load total days from database on mount
   useEffect(() => {
     loadProgress()
-  }, [])
+  }, [programmeId])
 
   const loadProgress = async () => {
     try {
-      const progress = await getProgress()
+      const progress = await getProgress(programmeId)
       if (progress) {
         setTotalDays(progress.total_days_completed)
       }

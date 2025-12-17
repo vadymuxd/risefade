@@ -1,9 +1,10 @@
 import { supabase } from './supabase'
-import type { WeeklySession, DailySession } from './supabase'
+import type { WeeklySession, DailySession, Programme } from './supabase'
 
 // Simplified progress interface
 export interface Progress {
   id: number
+  programme_id: number
   wins: number
   losses: number
   total_days_completed: number
@@ -13,12 +14,43 @@ export interface Progress {
   updated_at: string
 }
 
-// Get progress (single row)
-export async function getProgress(): Promise<Progress | null> {
+// Get all programmes
+export async function getProgrammes(): Promise<Programme[]> {
+  const { data, error } = await supabase
+    .from('programmes')
+    .select('*')
+    .order('id', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching programmes:', error)
+    return []
+  }
+
+  return data || []
+}
+
+// Get a specific programme by id
+export async function getProgramme(id: number): Promise<Programme | null> {
+  const { data, error } = await supabase
+    .from('programmes')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching programme:', error)
+    return null
+  }
+
+  return data
+}
+
+// Get progress for a specific programme
+export async function getProgress(programmeId: number = 1): Promise<Progress | null> {
   const { data, error } = await supabase
     .from('progress')
     .select('*')
-    .eq('id', 1)
+    .eq('programme_id', programmeId)
     .single()
 
   if (error && error.code !== 'PGRST116') {
@@ -29,14 +61,45 @@ export async function getProgress(): Promise<Progress | null> {
   return data
 }
 
-// Get current week session
-export async function getCurrentWeekSession(): Promise<WeeklySession | null> {
+// Get or create progress for a programme
+export async function getOrCreateProgress(programmeId: number = 1): Promise<Progress | null> {
+  let progress = await getProgress(programmeId)
+  
+  if (!progress) {
+    // Create new progress entry for this programme
+    const { data, error } = await supabase
+      .from('progress')
+      .insert({
+        programme_id: programmeId,
+        wins: 0,
+        losses: 0,
+        total_days_completed: 0,
+        current_streak: 0,
+        longest_streak: 0
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating progress:', error)
+      return null
+    }
+
+    progress = data
+  }
+
+  return progress
+}
+
+// Get current week session for a specific programme
+export async function getCurrentWeekSession(programmeId: number = 1): Promise<WeeklySession | null> {
   const startOfWeek = getStartOfWeek()
   
   const { data, error } = await supabase
     .from('weekly_sessions')
     .select('*')
     .eq('week_start_date', startOfWeek)
+    .eq('programme_id', programmeId)
     .single()
 
   if (error && error.code !== 'PGRST116') {
@@ -47,8 +110,8 @@ export async function getCurrentWeekSession(): Promise<WeeklySession | null> {
   return data
 }
 
-// Create or update weekly session
-export async function updateWeeklySession(completedDays: string[]): Promise<WeeklySession | null> {
+// Create or update weekly session for a specific programme
+export async function updateWeeklySession(completedDays: string[], programmeId: number = 1): Promise<WeeklySession | null> {
   const startOfWeek = getStartOfWeek()
   const isCompleted = completedDays.length === 3 // All 3 days completed
   
@@ -56,12 +119,13 @@ export async function updateWeeklySession(completedDays: string[]): Promise<Week
     .from('weekly_sessions')
     .upsert({
       week_start_date: startOfWeek,
+      programme_id: programmeId,
       completed_days: completedDays,
       is_completed: isCompleted,
       completed_at: isCompleted ? new Date().toISOString() : null,
       updated_at: new Date().toISOString()
     }, {
-      onConflict: 'week_start_date'
+      onConflict: 'programme_id,week_start_date'
     })
     .select()
     .single()
@@ -74,9 +138,9 @@ export async function updateWeeklySession(completedDays: string[]): Promise<Week
   return data
 }
 
-// Record daily session completion
-export async function recordDayCompletion(dayKey: string, exerciseIds: string[]): Promise<DailySession | null> {
-  const weeklySession = await getCurrentWeekSession()
+// Record daily session completion for a specific programme
+export async function recordDayCompletion(dayKey: string, exerciseIds: string[], programmeId: number = 1): Promise<DailySession | null> {
+  const weeklySession = await getCurrentWeekSession(programmeId)
   
   if (!weeklySession) return null
 
@@ -101,11 +165,11 @@ export async function recordDayCompletion(dayKey: string, exerciseIds: string[])
   return data
 }
 
-// Increment total days completed
-export async function incrementTotalDays(): Promise<boolean> {
+// Increment total days completed for a specific programme
+export async function incrementTotalDays(programmeId: number = 1): Promise<boolean> {
   try {
     // First get current count
-    const currentProgress = await getProgress()
+    const currentProgress = await getProgress(programmeId)
     if (!currentProgress) return false
 
     // Increment by 1
@@ -115,7 +179,7 @@ export async function incrementTotalDays(): Promise<boolean> {
         total_days_completed: currentProgress.total_days_completed + 1,
         updated_at: new Date().toISOString()
       })
-      .eq('id', 1)
+      .eq('programme_id', programmeId)
 
     if (error) {
       console.error('Error incrementing total days:', error)
@@ -129,11 +193,11 @@ export async function incrementTotalDays(): Promise<boolean> {
   }
 }
 
-// Decrement total days completed
-export async function decrementTotalDays(): Promise<boolean> {
+// Decrement total days completed for a specific programme
+export async function decrementTotalDays(programmeId: number = 1): Promise<boolean> {
   try {
     // First get current count
-    const currentProgress = await getProgress()
+    const currentProgress = await getProgress(programmeId)
     if (!currentProgress) return false
 
     // Decrement by 1, but don't go below 0
@@ -144,7 +208,7 @@ export async function decrementTotalDays(): Promise<boolean> {
         total_days_completed: newCount,
         updated_at: new Date().toISOString()
       })
-      .eq('id', 1)
+      .eq('programme_id', programmeId)
 
     if (error) {
       console.error('Error decrementing total days:', error)
@@ -158,10 +222,10 @@ export async function decrementTotalDays(): Promise<boolean> {
   }
 }
 
-// Increment wins counter
-export async function incrementWins(): Promise<boolean> {
+// Increment wins counter for a specific programme
+export async function incrementWins(programmeId: number = 1): Promise<boolean> {
   try {
-    const currentProgress = await getProgress()
+    const currentProgress = await getProgress(programmeId)
     if (!currentProgress) return false
 
     const { error } = await supabase
@@ -170,7 +234,7 @@ export async function incrementWins(): Promise<boolean> {
         wins: currentProgress.wins + 1,
         updated_at: new Date().toISOString()
       })
-      .eq('id', 1)
+      .eq('programme_id', programmeId)
 
     if (error) {
       console.error('Error incrementing wins:', error)
@@ -184,10 +248,10 @@ export async function incrementWins(): Promise<boolean> {
   }
 }
 
-// Decrement wins counter
-export async function decrementWins(): Promise<boolean> {
+// Decrement wins counter for a specific programme
+export async function decrementWins(programmeId: number = 1): Promise<boolean> {
   try {
-    const currentProgress = await getProgress()
+    const currentProgress = await getProgress(programmeId)
     if (!currentProgress) return false
 
     // Decrement by 1, but don't go below 0
@@ -198,7 +262,7 @@ export async function decrementWins(): Promise<boolean> {
         wins: newCount,
         updated_at: new Date().toISOString()
       })
-      .eq('id', 1)
+      .eq('programme_id', programmeId)
 
     if (error) {
       console.error('Error decrementing wins:', error)
@@ -212,10 +276,10 @@ export async function decrementWins(): Promise<boolean> {
   }
 }
 
-// Increment losses counter
-export async function incrementLosses(): Promise<boolean> {
+// Increment losses counter for a specific programme
+export async function incrementLosses(programmeId: number = 1): Promise<boolean> {
   try {
-    const currentProgress = await getProgress()
+    const currentProgress = await getProgress(programmeId)
     if (!currentProgress) return false
 
     const { error } = await supabase
@@ -224,7 +288,7 @@ export async function incrementLosses(): Promise<boolean> {
         losses: currentProgress.losses + 1,
         updated_at: new Date().toISOString()
       })
-      .eq('id', 1)
+      .eq('programme_id', programmeId)
 
     if (error) {
       console.error('Error incrementing losses:', error)
@@ -238,10 +302,10 @@ export async function incrementLosses(): Promise<boolean> {
   }
 }
 
-// Decrement losses counter
-export async function decrementLosses(): Promise<boolean> {
+// Decrement losses counter for a specific programme
+export async function decrementLosses(programmeId: number = 1): Promise<boolean> {
   try {
-    const currentProgress = await getProgress()
+    const currentProgress = await getProgress(programmeId)
     if (!currentProgress) return false
 
     // Decrement by 1, but don't go below 0
@@ -252,7 +316,7 @@ export async function decrementLosses(): Promise<boolean> {
         losses: newCount,
         updated_at: new Date().toISOString()
       })
-      .eq('id', 1)
+      .eq('programme_id', programmeId)
 
     if (error) {
       console.error('Error decrementing losses:', error)
@@ -266,14 +330,31 @@ export async function decrementLosses(): Promise<boolean> {
   }
 }
 
-// Reset progress (for development/testing)
-export async function resetProgress(): Promise<boolean> {
+// Reset progress for a specific programme (for development/testing)
+export async function resetProgress(programmeId: number = 1): Promise<boolean> {
   try {
-    // Delete all related data
-    await supabase.from('daily_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabase.from('weekly_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    // Get weekly sessions for this programme
+    const { data: weeklySessions } = await supabase
+      .from('weekly_sessions')
+      .select('id')
+      .eq('programme_id', programmeId)
+
+    if (weeklySessions && weeklySessions.length > 0) {
+      const sessionIds = weeklySessions.map(s => s.id)
+      // Delete daily sessions for these weekly sessions
+      await supabase
+        .from('daily_sessions')
+        .delete()
+        .in('weekly_session_id', sessionIds)
+    }
+
+    // Delete weekly sessions for this programme
+    await supabase
+      .from('weekly_sessions')
+      .delete()
+      .eq('programme_id', programmeId)
     
-    // Reset progress
+    // Reset progress for this programme
     await supabase
       .from('progress')
       .update({
@@ -284,7 +365,7 @@ export async function resetProgress(): Promise<boolean> {
         longest_streak: 0,
         updated_at: new Date().toISOString()
       })
-      .eq('id', 1)
+      .eq('programme_id', programmeId)
 
     return true
   } catch (error) {
@@ -293,14 +374,14 @@ export async function resetProgress(): Promise<boolean> {
   }
 }
 
-// Reset all progress including total days completed
+// Reset all progress for all programmes (for development/testing)
 export async function resetAllProgress(): Promise<boolean> {
   try {
     // Delete all related data
     await supabase.from('daily_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('weekly_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     
-    // Reset ALL progress including total days
+    // Reset ALL progress for all programmes
     await supabase
       .from('progress')
       .update({
@@ -311,7 +392,7 @@ export async function resetAllProgress(): Promise<boolean> {
         longest_streak: 0,
         updated_at: new Date().toISOString()
       })
-      .eq('id', 1)
+      .neq('id', 0)
 
     return true
   } catch (error) {
